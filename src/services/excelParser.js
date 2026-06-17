@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import XLSX from 'xlsx-js-style';
 
 const TITLE_REGEX = /Progress Notes\s*—\s*(.+?)\s*\|\s*Room:\s*(.+?)\s*\|\s*DOB:\s*(.+)/i;
 const DAY_REGEX = /Day\s*(\d)/i;

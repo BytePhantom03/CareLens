@@ -52,7 +52,7 @@ export default function BatchMode({ pipelineInputs, onReset }) {
   };
 
   const handleExport = () => {
-    exportBatchToExcel(results);
+    exportBatchToExcel(results, pipelineInputs);
   };
 
   const progressPercentage = pipelineInputs.length > 0
