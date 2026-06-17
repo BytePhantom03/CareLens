@@ -1,0 +1,10 @@
+# Decision Log
+
+## How I structured the policy as input to the AI
+I structured the policy as a JavaScript configuration object containing structured boolean flags that need to be extracted from the nurse's note (e.g., `has_numeric_score`, `can_full_weight_bear`). The prompt explicitly asks the AI to evaluate the text and extract these boolean flags based on the schema, but NO compliance decisions are made by the AI.
+
+## One thing the AI suggested that I changed or rejected
+I decided against having the AI directly classify whether a field is "Missing", "Incomplete", or "Vague". While the AI is capable of making these compliance decisions, doing so makes the system non-deterministic and hard to audit. Instead, I created a deterministic Rule Engine in `policy.js` that uses simple if/else logic on the boolean flags extracted by the AI to make the final classification.
+
+## One decision the AI could not make for me and how I resolved it
+The AI could not reliably interpret the Day 1 requirements logic for conditional statements (e.g., "if pain is mentioned but no 0-10 score is documented it is Incomplete"). I resolved this by splitting the extraction into literal boolean sub-questions (e.g., "is pain mentioned?", "is a numeric score given?"). The deterministic Rule Engine then combines these booleans (`!has_numeric_score -> Missing`) to align precisely with the expected output flags, ensuring that the final logic mirrors the facility's policy.
