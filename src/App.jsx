@@ -94,7 +94,7 @@ function App() {
         </button>
       </div>
 
-      {activeTab === 'single' && (
+      <div style={{ display: activeTab === 'single' ? 'block' : 'none' }}>
         <div className="single-check-view">
           <div style={{ marginBottom: '1rem', display: 'flex', gap: '1rem' }}>
             <button className="btn-secondary" onClick={() => loadSample('johnDoe', 1)}>Load John Doe (Day 1)</button>
@@ -145,9 +145,9 @@ function App() {
             </div>
           )}
         </div>
-      )}
+      </div>
 
-      {activeTab === 'excel' && (
+      <div style={{ display: activeTab === 'excel' ? 'block' : 'none' }}>
         <div className="excel-import-view">
           {!pipelineInputs && (
             <ExcelUploader onUploadSuccess={handleUploadSuccess} />
@@ -167,7 +167,7 @@ function App() {
             />
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

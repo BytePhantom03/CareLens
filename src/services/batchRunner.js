@@ -4,7 +4,7 @@ export async function runBatchChecks(pipelineInputs, onProgress, isCancelledRef,
   const results = [];
   for (let i = 0; i < pipelineInputs.length; i++) {
     if (isCancelledRef && isCancelledRef.current) break;
-    
+
     const input = pipelineInputs[i];
     onProgress?.(i + 1, pipelineInputs.length, input);
 
