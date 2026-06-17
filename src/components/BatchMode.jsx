@@ -3,6 +3,7 @@ import { runBatchChecks } from '../services/batchRunner';
 import { exportBatchToExcel } from '../utils/exportToExcel';
 import { groupResultsByResident } from '../utils/groupResultsByResident';
 import ResidentReportTable from './ResidentReportTable';
+import { saveAuditResults } from '../services/historyStorage';
 
 export default function BatchMode({ pipelineInputs, onReset }) {
   const [results, setResults] = useState([]);
@@ -39,6 +40,8 @@ export default function BatchMode({ pipelineInputs, onReset }) {
         isCancelled
       );
       setResults(finalResults);
+      // Save valid results to analytics history
+      saveAuditResults(finalResults.filter(r => r.overall_status !== 'error'), 'batch');
     } catch (err) {
       setBatchError(err.message || 'Unexpected error during batch processing');
     } finally {

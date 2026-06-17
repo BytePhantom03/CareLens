@@ -176,7 +176,7 @@ export const FALLS_POLICY = {
         id: "d2_mobility",
         field: "Mobility status unclear",
         extractionSchema: {
-          mobility_mentioned: { type: "boolean", description: "Is mobility mentioned?" },
+          mobility_mentioned: { type: "boolean", description: "Is mobility or general physical status mentioned, even vaguely (e.g. 'seems okay')?" },
           can_full_weight_bear: { type: "boolean", description: "Does it explicitly state if the resident can full weight-bear without pain? ('seems okay' is false)" }
         },
         evaluate: (data) => {
@@ -226,7 +226,7 @@ export const FALLS_POLICY = {
         id: "d3_pain_outcome",
         field: "Pain outcome not clinically confirmed",
         extractionSchema: {
-          pain_mentioned: { type: "boolean", description: "Is pain mentioned?" },
+          pain_mentioned: { type: "boolean", description: "Is pain, comfort, or general physical wellbeing mentioned, even vaguely (e.g. 'doing much better')?" },
           clinically_confirmed: { type: "boolean", description: "Is it clinically confirmed as resolved or ongoing with escalation? ('doing much better' is false)" }
         },
         evaluate: (data) => {
@@ -239,7 +239,7 @@ export const FALLS_POLICY = {
         id: "d3_mobility",
         field: "Mobility not confirmed at baseline",
         extractionSchema: {
-          mobility_mentioned: { type: "boolean", description: "Is mobility mentioned?" },
+          mobility_mentioned: { type: "boolean", description: "Is mobility or fall status mentioned, even vaguely (e.g. 'no further falls')?" },
           confirmed_at_baseline: { type: "boolean", description: "Is it explicitly confirmed that mobility returned to baseline, or reduced with follow-up? ('no further falls' is false)" }
         },
         evaluate: (data) => {
@@ -277,7 +277,7 @@ export const FALLS_POLICY = {
         field: "Escalation not documented",
         extractionSchema: {
           escalated: { type: "boolean", description: "If not stabilised, was it escalated?" },
-          stabilised: { type: "boolean", description: "Is the resident stabilised?" }
+          stabilised: { type: "boolean", description: "Is the resident clinically stabilised? (If pain is resolved and mobility is at baseline, or if incident is closed, they ARE considered stabilised)" }
         },
         evaluate: (data) => (!data.stabilised && !data.escalated) ? "Missing" : "Complete"
       }

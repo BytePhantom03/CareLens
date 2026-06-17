@@ -151,6 +151,16 @@ async function callOpenAICompatible(baseUrl, apiKey, model, systemPrompt, userPr
   }
 }
 
+const providerCooldowns = {};
+
+function isProviderCoolingDown(name) {
+  return providerCooldowns[name] && Date.now() < providerCooldowns[name];
+}
+
+function setProviderCooldown(name, seconds) {
+  providerCooldowns[name] = Date.now() + (seconds * 1000);
+}
+
 export async function callGemini(systemPrompt, userPrompt, responseSchema = null) {
   const openAIKey   = getEnv('VITE_OPENAI_API_KEY');
   const githubToken = getEnv('VITE_GITHUB_TOKEN');
@@ -158,35 +168,24 @@ export async function callGemini(systemPrompt, userPrompt, responseSchema = null
   const geminiKey1  = getEnv('VITE_GEMINI_API_KEY');
   const geminiKey2  = getEnv('VITE_GEMINI_API_KEY_2');
 
-  // Provider chain — first available key wins, each tried once before moving on
-  // Order: OpenAI → GitHub Models → Groq → Gemini primary → Gemini alt
   const providers = [];
 
   if (openAIKey) {
     providers.push({
       name: 'OpenAI',
-      fn: () => callOpenAICompatible(
-        AI_CONFIG.openai.baseUrl, openAIKey,
-        AI_CONFIG.openai.model, systemPrompt, userPrompt, responseSchema, 'OpenAI'
-      )
+      fn: () => callOpenAICompatible(AI_CONFIG.openai.baseUrl, openAIKey, AI_CONFIG.openai.model, systemPrompt, userPrompt, responseSchema, 'OpenAI')
     });
   }
   if (githubToken) {
     providers.push({
       name: 'GitHub Models',
-      fn: () => callOpenAICompatible(
-        AI_CONFIG.github.baseUrl, githubToken,
-        AI_CONFIG.github.model, systemPrompt, userPrompt, responseSchema, 'GitHub'
-      )
+      fn: () => callOpenAICompatible(AI_CONFIG.github.baseUrl, githubToken, AI_CONFIG.github.model, systemPrompt, userPrompt, responseSchema, 'GitHub')
     });
   }
   if (groqKey) {
     providers.push({
       name: 'Groq',
-      fn: () => callOpenAICompatible(
-        'https://api.groq.com/openai/v1', groqKey,
-        AI_CONFIG.groq.model, systemPrompt, userPrompt, responseSchema, 'Groq'
-      )
+      fn: () => callOpenAICompatible('https://api.groq.com/openai/v1', groqKey, AI_CONFIG.groq.model, systemPrompt, userPrompt, responseSchema, 'Groq')
     });
   }
   if (geminiKey1) {
@@ -206,29 +205,28 @@ export async function callGemini(systemPrompt, userPrompt, responseSchema = null
     throw new Error('No AI API keys configured. Add at least one key to your .env file.');
   }
 
-  const { baseDelayMs } = AI_CONFIG.retry;
+  const availableProviders = providers.filter(p => !isProviderCoolingDown(p.name));
+
+  if (availableProviders.length === 0) {
+    throw new Error('RATE_LIMIT_EXCEEDED: All AI providers are currently rate limited.');
+  }
+
   let lastError = null;
 
-  for (const provider of providers) {
-    // Each provider gets 2 attempts — if rate-limited, retry once after a short wait
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      try {
-        const result = await provider.fn();
-        return result;
-      } catch (err) {
-        lastError = err;
+  for (const provider of availableProviders) {
+    try {
+      return await provider.fn();
+    } catch (err) {
+      lastError = err;
 
-        if (!err.retryable) {
-          // Hard error (auth, bad request etc.) — skip this provider immediately
-          break;
-        }
-
-        if (attempt === 1) {
-          // Rate-limited — wait briefly then retry this provider once before giving up
-          await sleep(baseDelayMs);
-        }
-        // After 2 attempts, fall through to the next provider
+      if (err.status === 429 || err.status === 503 || (err.message && err.message.includes('RATE_LIMIT'))) {
+        console.warn(`[${provider.name}] Rate limit hit. Cooling down for 15s.`);
+        setProviderCooldown(provider.name, 15);
+        continue; // Fall through immediately to next provider
       }
+
+      // For other errors, just try the next provider
+      continue;
     }
   }
 

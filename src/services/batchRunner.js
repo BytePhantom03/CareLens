@@ -16,6 +16,13 @@ export async function runBatchChecks(pipelineInputs, onProgress, isCancelledRef,
         ...checked
       });
     } catch (err) {
+      if (err.message.includes('rate limit') || err.message.includes('RATE_LIMIT') || err.message.includes('429')) {
+        console.warn('Rate limit hit. Pausing batch queue for 10 seconds before retrying...');
+        await new Promise(r => setTimeout(r, 10000));
+        i--; // retry current index
+        continue;
+      }
+
       results.push({
         residentName: input.residentName,
         dayNumber: input.dayNumber,
@@ -25,7 +32,7 @@ export async function runBatchChecks(pipelineInputs, onProgress, isCancelledRef,
     }
 
     if (i < pipelineInputs.length - 1) {
-      await new Promise(r => setTimeout(r, 1500)); // 1.5s between calls to respect rate limits
+      await new Promise(r => setTimeout(r, 3000)); // 3s between calls to stretch out API limits
     }
   }
   return results;

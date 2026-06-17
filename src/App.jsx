@@ -3,11 +3,13 @@ import './App.css';
 import { checkNote } from './services/checker';
 import { SAMPLE_RESIDENTS } from './data/samples';
 import { exportToTSV } from './utils/export';
+import { saveAuditResults } from './services/historyStorage';
 
 import ExcelUploader from './components/ExcelUploader';
 import ExtractionPreview from './components/ExtractionPreview';
 import BatchMode from './components/BatchMode';
 import ResidentReportTable from './components/ResidentReportTable';
+import AnalyticsDashboard from './components/AnalyticsDashboard/AnalyticsDashboard';
 
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import LoginScreen from './components/LoginScreen/LoginScreen';
@@ -42,9 +44,14 @@ function AppShell() {
 
   const allowedTabs = session && session.role && ROLES[session.role] ? ROLES[session.role].tabs : ['single'];
 
-  // If activeTab is not allowed, switch to the first allowed tab
-  if (!allowedTabs.includes(activeTab) && allowedTabs.length > 0) {
-    setActiveTab(allowedTabs[0]);
+  const isSingleAllowed = allowedTabs.includes('single');
+  const isExcelAllowed = allowedTabs.includes('batch') || allowedTabs.includes('excelImport');
+
+  // If activeTab is not allowed, switch to a valid tab
+  if (activeTab === 'single' && !isSingleAllowed && isExcelAllowed) {
+    setActiveTab('excel');
+  } else if (activeTab === 'excel' && !isExcelAllowed && isSingleAllowed) {
+    setActiveTab('single');
   }
 
   const handleCheck = async () => {
@@ -60,6 +67,12 @@ function AppShell() {
     try {
       const res = await checkNote(note, dayNumber);
       setResult(res);
+      // Save to analytics history
+      saveAuditResults({
+        residentName: 'Single Check',
+        dayNumber: dayNumber,
+        ...res
+      }, 'single');
     } catch (err) {
       setError(err.message || 'Failed to check note. The AI service may be temporarily unavailable.');
     } finally {
@@ -135,6 +148,18 @@ function AppShell() {
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
             </svg>
             Excel Import
+          </button>
+        )}
+
+        {allowedTabs.includes('analytics') && (
+          <button 
+            className={`tab ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '0.4rem'}}>
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            Analytics
           </button>
         )}
       </div>
@@ -242,6 +267,10 @@ function AppShell() {
             />
           )}
         </div>
+      </div>
+
+      <div style={{ display: activeTab === 'analytics' ? 'block' : 'none' }}>
+        {activeTab === 'analytics' && <AnalyticsDashboard />}
       </div>
 
       {/* Toast notification */}
