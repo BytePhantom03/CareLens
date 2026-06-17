@@ -74,15 +74,15 @@ async function callGeminiWithKey(apiKey, systemPrompt, userPrompt, responseSchem
   }
 }
 
-async function callGroq(apiKey, systemPrompt, userPrompt, responseSchema) {
-  const url = 'https://api.groq.com/openai/v1/chat/completions';
+async function callOpenAICompatible(baseUrl, apiKey, model, systemPrompt, userPrompt, responseSchema, providerName) {
+  const url = `${baseUrl}/chat/completions`;
 
   const sysContent = responseSchema
     ? `${systemPrompt}\n\nYou MUST respond with ONLY a valid JSON object. No markdown, no explanation, just JSON.`
     : systemPrompt;
 
   const payload = {
-    model: AI_CONFIG.groq.model,
+    model,
     temperature: AI_CONFIG.temperature,
     max_tokens: AI_CONFIG.maxOutputTokens,
     messages: [
@@ -110,7 +110,7 @@ async function callGroq(apiKey, systemPrompt, userPrompt, responseSchema) {
     });
 
     if (response.status === 429) {
-      const err = new Error('GROQ_RATE_LIMIT:429');
+      const err = new Error(`${providerName}_RATE_LIMIT:429`);
       err.status = 429;
       err.retryable = true;
       throw err;
@@ -118,7 +118,7 @@ async function callGroq(apiKey, systemPrompt, userPrompt, responseSchema) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(`Groq API error: ${response.status} - ${JSON.stringify(errorData)}`);
+      throw new Error(`${providerName} API error: ${response.status} - ${JSON.stringify(errorData)}`);
     }
 
     const data = await response.json();
@@ -130,7 +130,7 @@ async function callGroq(apiKey, systemPrompt, userPrompt, responseSchema) {
     return content;
   } catch (err) {
     if (err.name === 'AbortError') {
-      const timeoutErr = new Error('Groq request timed out after 30s');
+      const timeoutErr = new Error(`${providerName} request timed out after 30s`);
       timeoutErr.retryable = true;
       throw timeoutErr;
     }
@@ -141,17 +141,61 @@ async function callGroq(apiKey, systemPrompt, userPrompt, responseSchema) {
 }
 
 export async function callGemini(systemPrompt, userPrompt, responseSchema = null) {
-  const geminiKey1 = getEnv('VITE_GEMINI_API_KEY');
-  const geminiKey2 = getEnv('VITE_GEMINI_API_KEY_2');
-  const groqKey = getEnv('VITE_GROQ_API_KEY');
+  const openAIKey    = getEnv('VITE_OPENAI_API_KEY');
+  const geminiKey1   = getEnv('VITE_GEMINI_API_KEY');
+  const geminiKey2   = getEnv('VITE_GEMINI_API_KEY_2');
+  const groqKey      = getEnv('VITE_GROQ_API_KEY');
+  const githubToken  = getEnv('VITE_GITHUB_TOKEN');
 
   const providers = [];
-  if (geminiKey1) providers.push({ name: 'Gemini (primary)', fn: () => callGeminiWithKey(geminiKey1, systemPrompt, userPrompt, responseSchema) });
-  if (geminiKey2) providers.push({ name: 'Gemini (alt)',     fn: () => callGeminiWithKey(geminiKey2, systemPrompt, userPrompt, responseSchema) });
-  if (groqKey)   providers.push({ name: 'Groq',             fn: () => callGroq(groqKey, systemPrompt, userPrompt, responseSchema) });
+
+  // 1st — OpenAI (gpt-4o-mini)
+  if (openAIKey) {
+    providers.push({
+      name: 'OpenAI',
+      fn: () => callOpenAICompatible(
+        AI_CONFIG.openai.baseUrl, openAIKey,
+        AI_CONFIG.openai.model, systemPrompt, userPrompt, responseSchema, 'OpenAI'
+      )
+    });
+  }
+  // 2nd — Gemini primary
+  if (geminiKey1) {
+    providers.push({
+      name: 'Gemini (primary)',
+      fn: () => callGeminiWithKey(geminiKey1, systemPrompt, userPrompt, responseSchema)
+    });
+  }
+  // 3rd — Gemini alt
+  if (geminiKey2) {
+    providers.push({
+      name: 'Gemini (alt)',
+      fn: () => callGeminiWithKey(geminiKey2, systemPrompt, userPrompt, responseSchema)
+    });
+  }
+  // 4th — Groq (free)
+  if (groqKey) {
+    providers.push({
+      name: 'Groq',
+      fn: () => callOpenAICompatible(
+        'https://api.groq.com/openai/v1', groqKey,
+        AI_CONFIG.groq.model, systemPrompt, userPrompt, responseSchema, 'Groq'
+      )
+    });
+  }
+  // 5th — GitHub Models (free with PAT)
+  if (githubToken) {
+    providers.push({
+      name: 'GitHub Models',
+      fn: () => callOpenAICompatible(
+        AI_CONFIG.github.baseUrl, githubToken,
+        AI_CONFIG.github.model, systemPrompt, userPrompt, responseSchema, 'GitHub'
+      )
+    });
+  }
 
   if (providers.length === 0) {
-    throw new Error('No AI API keys configured. Add VITE_GEMINI_API_KEY, VITE_GEMINI_API_KEY_2, or VITE_GROQ_API_KEY to your .env file.');
+    throw new Error('No AI API keys configured. Add VITE_GEMINI_API_KEY or VITE_GROQ_API_KEY to your .env file.');
   }
 
   const { maxAttempts, baseDelayMs } = AI_CONFIG.retry;

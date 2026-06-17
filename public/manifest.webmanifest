@@ -1,0 +1,16 @@
+{
+  "name": "Falls Documentation Checker",
+  "short_name": "FallsChecker",
+  "description": "AI-powered Falls Management Documentation Checker for aged care facilities",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#4f8ef7",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
