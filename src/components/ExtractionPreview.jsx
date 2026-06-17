@@ -1,21 +1,169 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+
+/**
+ * Re-evaluates blocked status for all inputs based on current data.
+ * Rules match excelMapper.js logic:
+ * - Day 1: never blocked
+ * - Day 2: blocked if Day 1 is missing or has < 10 chars
+ * - Day 3: blocked if Day 1 or Day 2 is missing or has < 10 chars
+ */
+function revalidateInputs(inputs) {
+  const updated = inputs.map(inp => ({ ...inp }));
+
+  // Group by resident
+  const grouped = {};
+  for (const inp of updated) {
+    if (!grouped[inp.residentName]) grouped[inp.residentName] = {};
+    grouped[inp.residentName][inp.dayNumber] = inp;
+  }
+
+  for (const [, days] of Object.entries(grouped)) {
+    if (days[1]) {
+      days[1].blocked = false;
+      days[1].blockReason = null;
+    }
+
+    if (days[2]) {
+      const day1Valid = days[1] && days[1].progressNote && days[1].progressNote.trim().length >= 10;
+      if (!day1Valid) {
+        days[2].blocked = true;
+        days[2].blockReason = 'Day 1 is missing. Day 2 requires Day 1 to be present.';
+      } else {
+        days[2].blocked = false;
+        days[2].blockReason = null;
+      }
+    }
+
+    if (days[3]) {
+      const missing = [];
+      const day1Valid = days[1] && days[1].progressNote && days[1].progressNote.trim().length >= 10;
+      const day2Valid = days[2] && days[2].progressNote && days[2].progressNote.trim().length >= 10;
+      if (!day1Valid) missing.push('Day 1');
+      if (!day2Valid) missing.push('Day 2');
+
+      if (missing.length > 0) {
+        days[3].blocked = true;
+        days[3].blockReason = `${missing.join(' and ')} ${missing.length === 1 ? 'is' : 'are'} missing. Day 3 requires all preceding days.`;
+      } else {
+        days[3].blocked = false;
+        days[3].blockReason = null;
+      }
+    }
+  }
+
+  return updated;
+}
+
+/**
+ * Groups inputs by resident name, preserving order.
+ * Returns: [{ residentName, days: { 1?: input, 2?: input, 3?: input } }, ...]
+ */
+function groupByResident(inputs) {
+  const order = [];
+  const map = {};
+
+  for (const inp of inputs) {
+    if (!map[inp.residentName]) {
+      map[inp.residentName] = {};
+      order.push(inp.residentName);
+    }
+    map[inp.residentName][inp.dayNumber] = inp;
+  }
+
+  return order.map(name => ({ residentName: name, days: map[name] }));
+}
+
+/**
+ * For a resident, determine which days are missing and NEED to be added.
+ * A day needs adding only if a LATER day exists (causing a block).
+ * Returns: array of { dayNumber, position } where position is 'above' | 'between' | 'below'
+ */
+function getMissingDaySlots(days) {
+  const existing = Object.keys(days).map(Number).sort();
+  const maxDay = Math.max(...existing);
+  const slots = [];
+
+  for (let d = 1; d < maxDay; d++) {
+    if (!days[d]) {
+      slots.push(d);
+    }
+  }
+
+  return slots;
+}
 
 export default function ExtractionPreview({ initialInputs, onRunAll }) {
-  const [inputs, setInputs] = useState(initialInputs);
+  const [inputs, setInputs] = useState(() => {
+    const sorted = [...initialInputs].sort((a, b) => {
+      if (a.residentName !== b.residentName) return a.residentName.localeCompare(b.residentName);
+      return a.dayNumber - b.dayNumber;
+    });
+    return sorted;
+  });
 
-  const handleNoteChange = (index, newValue) => {
-    const newInputs = [...inputs];
-    newInputs[index].progressNote = newValue;
-    setInputs(newInputs);
-  };
+  const handleNoteChange = useCallback((residentName, dayNumber, newValue) => {
+    setInputs(prev => {
+      const newInputs = prev.map(inp =>
+        inp.residentName === residentName && inp.dayNumber === dayNumber
+          ? { ...inp, progressNote: newValue }
+          : inp
+      );
+      return revalidateInputs(newInputs);
+    });
+  }, []);
 
-  const blockedCount = inputs.filter(i => i.blocked).length;
-  const validCount = inputs.length - blockedCount;
+  const handleAddDay = useCallback((residentName, dayNumber) => {
+    setInputs(prev => {
+      const newInput = {
+        residentName,
+        dayNumber,
+        progressNote: '',
+        checkDate: new Date().toISOString().slice(0, 10),
+        blocked: false,
+        blockReason: null,
+        isNew: true,
+      };
+
+      // Insert in correct position: find the right spot for this resident + day
+      const newInputs = [...prev];
+      let insertIdx = newInputs.length; // default: end
+
+      for (let i = 0; i < newInputs.length; i++) {
+        const inp = newInputs[i];
+        if (inp.residentName === residentName && inp.dayNumber > dayNumber) {
+          // Insert before the first day that's after this one
+          insertIdx = i;
+          break;
+        }
+        if (inp.residentName === residentName) {
+          // After the last day of the same resident that's before this one
+          insertIdx = i + 1;
+        }
+      }
+
+      newInputs.splice(insertIdx, 0, newInput);
+      return revalidateInputs(newInputs);
+    });
+  }, []);
+
+  const handleRemoveDay = useCallback((residentName, dayNumber) => {
+    setInputs(prev => {
+      const newInputs = prev.filter(
+        inp => !(inp.residentName === residentName && inp.dayNumber === dayNumber)
+      );
+      return revalidateInputs(newInputs);
+    });
+  }, []);
+
+  const residents = useMemo(() => groupByResident(inputs), [inputs]);
+  const blockedCount = useMemo(() => inputs.filter(i => i.blocked).length, [inputs]);
+  const validCount = useMemo(() => inputs.filter(i => !i.blocked).length, [inputs]);
+  const blockedItems = useMemo(() => inputs.filter(i => i.blocked), [inputs]);
 
   return (
     <div className="extraction-preview">
       <h3>Extraction Preview</h3>
-      <p className="subtitle">Review the extracted notes. You can manually edit the text if the OCR/parser missed something.</p>
+      <p className="subtitle">Review the extracted notes. You can edit text or add missing days to unblock entries.</p>
 
       {blockedCount > 0 && (
         <div className="error-banner" style={{ marginBottom: '1rem' }}>
@@ -25,9 +173,9 @@ export default function ExtractionPreview({ initialInputs, onRunAll }) {
             <line x1="12" y1="17" x2="12.01" y2="17" />
           </svg>
           <div>
-            <strong>{blockedCount} note{blockedCount !== 1 ? 's' : ''} blocked:</strong>
+            <strong>{blockedCount} note{blockedCount !== 1 ? 's' : ''} blocked</strong> — click the <span className="add-hint-badge">+</span> button to add missing days.
             <ul style={{ margin: '0.4rem 0 0 1rem', padding: 0, listStyle: 'disc' }}>
-              {inputs.filter(i => i.blocked).map((inp, idx) => (
+              {blockedItems.map((inp, idx) => (
                 <li key={idx} style={{ fontSize: '0.85rem', marginBottom: '0.2rem' }}>
                   <strong>{inp.residentName} — Day {inp.dayNumber}:</strong> {inp.blockReason}
                 </li>
@@ -48,31 +196,108 @@ export default function ExtractionPreview({ initialInputs, onRunAll }) {
             </tr>
           </thead>
           <tbody>
-            {inputs.map((inp, idx) => (
-              <tr key={idx} className={inp.blocked ? 'row-blocked' : ''}>
-                <td>{inp.residentName}</td>
-                <td>Day {inp.dayNumber}</td>
-                <td>
-                  {inp.blocked ? (
-                    <span className="status-blocked" title={inp.blockReason}>
-                      ⚠️ Blocked
-                    </span>
-                  ) : (
-                    <span className="status-ready">✅ Ready</span>
-                  )}
-                </td>
-                <td>
-                  {inp.blocked ? (
-                    <div className="blocked-reason">{inp.blockReason}</div>
-                  ) : (
-                    <textarea
-                      value={inp.progressNote}
-                      onChange={(e) => handleNoteChange(idx, e.target.value)}
-                    />
-                  )}
-                </td>
-              </tr>
-            ))}
+            {residents.map(({ residentName, days }) => {
+              const missingSlots = getMissingDaySlots(days);
+              const existingDays = Object.keys(days).map(Number).sort();
+
+              // Build the full render list: existing days + add-hint rows in correct order
+              const renderSlots = [];
+
+              for (let d = 1; d <= 3; d++) {
+                if (days[d]) {
+                  // Existing day row
+                  renderSlots.push({ type: 'data', dayNumber: d, input: days[d] });
+                } else if (missingSlots.includes(d)) {
+                  // Missing day that needs to be added (a later day exists)
+                  renderSlots.push({ type: 'add-hint', dayNumber: d });
+                }
+                // If day doesn't exist and isn't needed → skip (no row)
+              }
+
+              return (
+                <React.Fragment key={residentName}>
+                  {renderSlots.map((slot, slotIdx) => {
+                    if (slot.type === 'add-hint') {
+                      return (
+                        <tr key={`${residentName}-add-${slot.dayNumber}`} className="add-row-slot">
+                          <td>{slotIdx === 0 ? residentName : ''}</td>
+                          <td colSpan={3}>
+                            <button
+                              className="add-day-btn"
+                              onClick={() => handleAddDay(residentName, slot.dayNumber)}
+                              title={`Add Day ${slot.dayNumber} for ${residentName}`}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                              </svg>
+                              Add Day {slot.dayNumber} — {residentName}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    const inp = slot.input;
+                    return (
+                      <tr
+                        key={`${residentName}-day-${slot.dayNumber}`}
+                        className={`${inp.blocked ? 'row-blocked' : ''} ${inp.isNew ? 'row-new' : ''}`}
+                      >
+                        <td>{residentName}</td>
+                        <td>Day {inp.dayNumber}</td>
+                        <td>
+                          {inp.blocked ? (
+                            <span className="status-blocked" title={inp.blockReason}>⚠️ Blocked</span>
+                          ) : (
+                            <span className="status-ready">✅ Ready</span>
+                          )}
+                        </td>
+                        <td>
+                          {inp.blocked && !inp.isNew ? (
+                            <div className="blocked-reason">{inp.blockReason}</div>
+                          ) : (
+                            <div className="note-cell">
+                              <textarea
+                                value={inp.progressNote}
+                                onChange={(e) => handleNoteChange(residentName, inp.dayNumber, e.target.value)}
+                                placeholder={inp.isNew ? `Enter Day ${inp.dayNumber} progress note for ${residentName}…` : ''}
+                                className={inp.isNew && inp.progressNote.trim().length < 10 ? 'textarea-needs-input' : ''}
+                              />
+                              {inp.isNew && (
+                                <div className="new-row-controls">
+                                  {inp.progressNote.trim().length < 10 && (
+                                    <span className="char-hint">
+                                      {inp.progressNote.trim().length}/10 chars minimum
+                                    </span>
+                                  )}
+                                  {inp.progressNote.trim().length >= 10 && (
+                                    <span className="char-hint" style={{ color: 'var(--success)' }}>
+                                      ✓ Ready
+                                    </span>
+                                  )}
+                                  <button
+                                    className="remove-row-btn"
+                                    onClick={() => handleRemoveDay(residentName, inp.dayNumber)}
+                                    title="Remove this row"
+                                  >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <line x1="18" y1="6" x2="6" y2="18" />
+                                      <line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg>
+                                    Remove
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </React.Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>
