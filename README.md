@@ -2,6 +2,8 @@
 
 An AI-powered clinical documentation auditing tool built for aged care facilities. It reads a nurse's daily progress note following a resident fall incident and evaluates whether that note meets every requirement defined in the facility's Falls Management Policy (POL-FAL-001).
 
+**🚀 Live Demo:** [https://care-lens-five.vercel.app](https://care-lens-five.vercel.app)
+
 ## Setup & Run
 
 1. Clone or extract this repository.
