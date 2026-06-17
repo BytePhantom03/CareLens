@@ -6,7 +6,14 @@ export function exportBatchToExcel(batchResults) {
   const workbook = XLSX.utils.book_new();
 
   for (const [residentName, dayResults] of Object.entries(grouped)) {
-    const sheetRows = [['Day', 'Flag Type', 'Field', 'Explanation']];
+    const numDays = dayResults.length;
+    const dayText = numDays === 1 ? 'day' : 'days';
+
+    const sheetRows = [
+      [`Checker Output — ${residentName}`, '', '', ''],
+      [`All ${numDays} ${dayText} reviewed against the Falls Management Policy.`, '', '', ''],
+      ['Day', 'Flag Type', 'Field', 'Explanation']
+    ];
     
     // Sort days
     const sortedDays = [...dayResults].sort((a, b) => a.dayNumber - b.dayNumber);
@@ -42,16 +49,19 @@ export function exportBatchToExcel(batchResults) {
     });
     
     const sheet = XLSX.utils.aoa_to_sheet(sheetRows);
+
+    sheet['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }
+    ];
     
-    // Format columns
     sheet['!cols'] = [
-      { wch: 10 }, // Day
-      { wch: 15 }, // Flag Type
-      { wch: 35 }, // Field
-      { wch: 80 }  // Explanation
+      { wch: 10 },
+      { wch: 15 },
+      { wch: 35 },
+      { wch: 80 }
     ];
 
-    // Excel sheet name limit is 31 characters
     XLSX.utils.book_append_sheet(workbook, sheet, residentName.substring(0, 31)); 
   }
 
