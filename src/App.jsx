@@ -131,7 +131,6 @@ function AppShell() {
           Falls Documentation Checker
         </h1>
         <p className="subtitle">Automated compliance checking powered by AI</p>
-        <div className="policy-badge">POL-FAL-001 · v1.0</div>
         <UserMenu />
       </header>
 

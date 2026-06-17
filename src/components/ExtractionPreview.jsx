@@ -19,14 +19,21 @@ export default function ExtractionPreview({ initialInputs, onRunAll }) {
 
       {blockedCount > 0 && (
         <div className="error-banner" style={{ marginBottom: '1rem' }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
             <line x1="12" y1="9" x2="12" y2="13" />
             <line x1="12" y1="17" x2="12.01" y2="17" />
           </svg>
-          <span>
-            <strong>{blockedCount} note{blockedCount !== 1 ? 's' : ''} blocked</strong> due to missing prerequisites or insufficient time gaps. These will be skipped during processing.
-          </span>
+          <div>
+            <strong>{blockedCount} note{blockedCount !== 1 ? 's' : ''} blocked:</strong>
+            <ul style={{ margin: '0.4rem 0 0 1rem', padding: 0, listStyle: 'disc' }}>
+              {inputs.filter(i => i.blocked).map((inp, idx) => (
+                <li key={idx} style={{ fontSize: '0.85rem', marginBottom: '0.2rem' }}>
+                  <strong>{inp.residentName} — Day {inp.dayNumber}:</strong> {inp.blockReason}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
 

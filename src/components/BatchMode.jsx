@@ -119,9 +119,6 @@ export default function BatchMode({ pipelineInputs, onReset }) {
                 Currently checking: {currentLabel}
               </div>
             )}
-            <div className="processing-fallback">
-              Auto-retrying on rate limits — using GitHub → Groq → Gemini fallback chain
-            </div>
             <div className="batch-progress">
               <div className="batch-progress-fill" style={{ width: `${progressPercentage}%` }} />
             </div>

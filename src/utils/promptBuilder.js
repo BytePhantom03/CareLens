@@ -3,12 +3,29 @@ export function buildExtractionSystemPrompt(dayLabel, schemaForPrompt = null) {
 Your task is to analyze a nurse's progress note and extract structured boolean flags based on specific policy requirements for ${dayLabel}.
 
 CRITICAL INSTRUCTIONS:
-1. 'VAGUE' VS 'MISSING': Many fields use a two-part check: a 'mentioned' boolean and a 'specific clinical requirement' boolean.
-   - If the nurse touches on the topic EVEN VAGUELY or uses general terms (e.g., "seems okay", "doing better", "no further falls", "will update"), you MUST set the 'mentioned' boolean to true.
-   - Only set the 'specific clinical requirement' boolean (e.g. numeric score, baseline confirmation) to true if it is explicitly documented.
-   - Only if the topic is completely absent should you set 'mentioned' to false (Missing).
-2. DEFINITIONS: Read the description of each JSON field extremely carefully. If a field's description states that a certain condition counts as a 'true', you MUST mark it as true, even if the exact keyword isn't used.
-3. Do not infer clinical information beyond what the field descriptions explicitly permit.`;
+
+1. 'MENTIONED' FIELDS — LIBERAL THRESHOLD:
+   Many fields have a 'mentioned' boolean. Set it to TRUE if the nurse touches on the topic in ANY way, including vague or informal language.
+   EXAMPLES OF PHRASES THAT COUNT AS 'mentioned = true':
+   - "seems okay" → mobility_mentioned = true, pain_mentioned = true
+   - "doing much better" → pain_mentioned = true
+   - "no further falls" → mobility_mentioned = true
+   - "will update" → mentioned = true (for care plan)
+   - "comfortable" → pain_mentioned = true
+   - "resting well" → pain_mentioned = true
+   - "mobilising slowly" → mobility_mentioned = true
+   Only set 'mentioned' to FALSE if the topic is COMPLETELY ABSENT from the entire note.
+
+2. 'SPECIFIC CLINICAL REQUIREMENT' FIELDS — STRICT THRESHOLD:
+   Fields like 'has_numeric_score', 'clinically_confirmed', 'confirmed_at_baseline', 'can_full_weight_bear' require EXPLICIT clinical documentation.
+   - "seems okay" does NOT confirm full weight-bearing → can_full_weight_bear = false
+   - "doing much better" does NOT clinically confirm pain resolution → clinically_confirmed = false
+   - "no further falls" does NOT confirm baseline mobility → confirmed_at_baseline = false
+
+3. DEFINITIONS: Read the description of each JSON field extremely carefully. If a field's description states that a certain condition counts as 'true', you MUST mark it as true, even if the exact keyword isn't used.
+
+4. Do not infer clinical information beyond what the field descriptions explicitly permit.`;
+
 
   if (schemaForPrompt) {
     return `${base}
