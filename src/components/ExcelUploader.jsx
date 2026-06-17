@@ -16,10 +16,17 @@ export default function ExcelUploader({ onUploadSuccess }) {
 
     try {
       const { residents, parseErrors } = await parseFallsWorkbook(file);
-      const pipelineInputs = toPipelineInputs(residents);
+      const { inputs: pipelineInputs, warnings: validationWarnings } = toPipelineInputs(residents);
       
-      if (parseErrors.length > 0) {
-        setErrors(parseErrors);
+      const allErrors = [...parseErrors];
+      if (validationWarnings.length > 0) {
+        validationWarnings.forEach(w => {
+          allErrors.push({ sheet: w.residentName, reason: w.message });
+        });
+      }
+
+      if (allErrors.length > 0) {
+        setErrors(allErrors);
       }
       
       if (pipelineInputs.length > 0) {
@@ -31,7 +38,6 @@ export default function ExcelUploader({ onUploadSuccess }) {
       setErrors([{ sheet: 'File', reason: err.message || 'Failed to read Excel file' }]);
     } finally {
       setLoading(false);
-      // Reset input so the same file can be uploaded again if needed
       e.target.value = null;
     }
   };

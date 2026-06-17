@@ -924,6 +924,38 @@ th {
   background: rgba(99, 102, 241, 0.04);
 }
 
+.row-blocked {
+  opacity: 0.6;
+  background: rgba(239, 68, 68, 0.04) !important;
+}
+
+.row-blocked:hover {
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+
+.status-blocked {
+  color: var(--error);
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: help;
+}
+
+.status-ready {
+  color: var(--success);
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.blocked-reason {
+  color: var(--error);
+  font-size: 0.85rem;
+  font-style: italic;
+  padding: 0.5rem;
+  background: rgba(239, 68, 68, 0.06);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--error);
+}
+
 .preview-footer {
   display: flex;
   justify-content: space-between;
