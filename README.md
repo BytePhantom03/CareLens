@@ -15,6 +15,11 @@ An AI-powered clinical documentation auditing tool built for aged care facilitie
 6. Run `npm run dev` to start the development server.
 7. Open the local URL provided (usually \`http://localhost:5173\`) in your browser.
 
+## Features
+
+- **Single Check**: Paste a single progress note for Day 1, 2, or 3, and get immediate compliance feedback.
+- **Excel Import (Batch Mode)**: Upload a standard Excel export containing multiple residents' progress notes. The system parses the workbook, lets you preview the extracted text, and runs all notes sequentially through the AI checker. Results can be downloaded as a new `.xlsx` file.
+
 ## Architecture
 
 This prototype is built using React 18 + Vite and connects directly to the Google Gemini 2.5 Flash-Lite API using REST.

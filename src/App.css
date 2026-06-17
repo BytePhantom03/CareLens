@@ -288,3 +288,10 @@ th {
   color: var(--text);
   pointer-events: none;
 }
+
+/* Resident Report Table Rows */
+.flag-row--missing { background: #FEF2F2; }
+.flag-row--incomplete,
+.flag-row--vague { background: #FFFBEB; }
+.flag-row--complete { background: #ECFDF5; }
+.flag-row--error { background: #F3F4F6; }
