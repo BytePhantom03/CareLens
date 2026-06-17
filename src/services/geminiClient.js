@@ -5,13 +5,19 @@ function sleep(ms) {
 }
 
 function getEnv(key) {
+  // 1. Check user-provided overrides in localStorage first
+  if (typeof window !== 'undefined' && window.localStorage) {
+    const localVal = window.localStorage.getItem(key);
+    if (localVal && localVal.trim()) return localVal.trim();
+  }
+
+  // 2. Fall back to environment variables
   let val = null;
   if (typeof process !== 'undefined' && process.env && process.env[key]) {
     val = process.env[key];
   } else {
     try { val = import.meta.env[key]; } catch (_) {}
   }
-  // Treat empty / whitespace-only strings as missing
   return val && val.trim() ? val.trim() : null;
 }
 

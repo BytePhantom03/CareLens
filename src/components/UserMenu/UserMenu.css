@@ -63,6 +63,27 @@
   margin-bottom: 1rem;
 }
 
+.user-menu-action-btn {
+  width: 100%;
+  padding: 0.5rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, border-color 0.2s;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.user-menu-action-btn:hover {
+  background: var(--surface);
+  border-color: #8b5cf6;
+}
+
 .user-menu-logout-btn {
   width: 100%;
   padding: 0.5rem;
