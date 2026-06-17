@@ -15,7 +15,6 @@ export async function parseFallsWorkbook(file) {
     
     if (!rows || rows.length === 0) continue;
 
-    // Detect flat table format: Columns 'Resident', 'Day', 'Progress Note Text'
     const headerRow = rows[0].map(c => (c || '').toString().trim());
     const isFlatTable = headerRow.some(c => /Resident/i.test(c)) && headerRow.some(c => /Day/i.test(c));
 
@@ -50,7 +49,6 @@ export async function parseFallsWorkbook(file) {
        continue;
     }
 
-    // Original blueprint structured format
     const titleRow = rows.find(r => /Progress Notes/i.test(r[0] || ''));
     const headerRowIndex = rows.findIndex(r => /^Day$/i.test((r[0] || '').toString().trim()));
 

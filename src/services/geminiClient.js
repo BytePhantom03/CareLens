@@ -5,13 +5,11 @@ function sleep(ms) {
 }
 
 function getEnv(key) {
-  // 1. Check user-provided overrides in localStorage first
   if (typeof window !== 'undefined' && window.localStorage) {
     const localVal = window.localStorage.getItem(key);
     if (localVal && localVal.trim()) return localVal.trim();
   }
 
-  // 2. Fall back to environment variables
   let val = null;
   if (typeof process !== 'undefined' && process.env && process.env[key]) {
     val = process.env[key];
@@ -127,7 +125,6 @@ async function callOpenAICompatible(baseUrl, apiKey, model, systemPrompt, userPr
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       const err = new Error(`${providerName} API error: ${response.status} - ${JSON.stringify(errorData)}`);
-      // 401=unauthorized, 400=bad request — these won't fix on retry, skip immediately
       err.retryable = (response.status >= 500);
       throw err;
     }

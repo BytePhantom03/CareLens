@@ -19,8 +19,6 @@ export async function checkNote(note, dayNumber) {
   }
   const requirements = policyForDay.requirements;
 
-  // Stage 1 & 2: Constrained Extraction & Verification
-  // Pass a schema example so non-Gemini providers get the structure in the system prompt
   const schemaExample = buildExtractionSchemaExample(requirements);
   const extSysPrompt = buildExtractionSystemPrompt(policyForDay.label, schemaExample);
   const extUserPrompt = buildExtractionUserPrompt(note);
@@ -28,7 +26,6 @@ export async function checkNote(note, dayNumber) {
 
   const extractedData = await callGemini(extSysPrompt, extUserPrompt, extSchema);
 
-  // Stage 3: Deterministic Rule Engine
   const evaluatedFlags = requirements.map(req => {
     const data = extractedData[req.id] || {};
     const status = req.evaluate(data);
@@ -59,7 +56,6 @@ export async function checkNote(note, dayNumber) {
     };
   }
 
-  // Stage 4: Explanation Generation
   const expSchemaExample = buildExplanationSchemaExample(issueFlags);
   const expSysPrompt = buildExplanationSystemPrompt(expSchemaExample);
   const expUserPrompt = buildExplanationUserPrompt(note, issueFlags);

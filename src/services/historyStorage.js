@@ -1,20 +1,5 @@
 const STORAGE_KEY = 'falls_checker_audit_history';
 
-/**
- * Audit history format:
- * [
- *   {
- *     id: "uuid",
- *     timestamp: 1678912345,
- *     residentName: "John Doe",
- *     dayNumber: 1,
- *     overall_status: "complete" | "has_issues" | "error",
- *     flags: [ ... ],
- *     source: "single" | "batch"
- *   }
- * ]
- */
-
 export function getAuditHistory() {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
@@ -38,7 +23,6 @@ export function saveAuditResults(results, source = 'batch') {
     }));
 
     const updatedHistory = [...enrichedEntries, ...history];
-    // Keep max 1000 records to prevent localstorage bloat
     const trimmedHistory = updatedHistory.slice(0, 1000);
     
     localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmedHistory));

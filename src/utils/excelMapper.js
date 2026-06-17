@@ -16,7 +16,6 @@ export function toPipelineInputs(residents, checkDate = new Date().toISOString()
       }
     }
 
-    // Day 1 — always valid
     if (dayMap[1]) {
       inputs.push({
         residentName: r.residentName,
@@ -28,7 +27,6 @@ export function toPipelineInputs(residents, checkDate = new Date().toISOString()
       });
     }
 
-    // Day 2
     if (dayMap[2]) {
       let blocked = false;
       let blockReason = null;
@@ -56,7 +54,6 @@ export function toPipelineInputs(residents, checkDate = new Date().toISOString()
       });
     }
 
-    // Day 3
     if (dayMap[3]) {
       let blocked = false;
       let blockReason = null;

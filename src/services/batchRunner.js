@@ -19,7 +19,7 @@ export async function runBatchChecks(pipelineInputs, onProgress, isCancelledRef,
       if (err.message.includes('rate limit') || err.message.includes('RATE_LIMIT') || err.message.includes('429')) {
         console.warn('Rate limit hit. Pausing batch queue for 10 seconds before retrying...');
         await new Promise(r => setTimeout(r, 10000));
-        i--; // retry current index
+        i--;
         continue;
       }
 
@@ -32,7 +32,7 @@ export async function runBatchChecks(pipelineInputs, onProgress, isCancelledRef,
     }
 
     if (i < pipelineInputs.length - 1) {
-      await new Promise(r => setTimeout(r, 3000)); // 3s between calls to stretch out API limits
+      await new Promise(r => setTimeout(r, 3000));
     }
   }
   return results;

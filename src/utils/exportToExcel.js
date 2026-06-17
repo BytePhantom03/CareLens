@@ -15,7 +15,6 @@ export function exportBatchToExcel(batchResults) {
       ['Day', 'Flag Type', 'Field', 'Explanation']
     ];
     
-    // Sort days
     const sortedDays = [...dayResults].sort((a, b) => a.dayNumber - b.dayNumber);
     
     sortedDays.forEach(day => {

@@ -1,7 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Stub import.meta.env
 global.import = { meta: { env: process.env } };
 
 import { checkNote } from './src/services/checker.js';
