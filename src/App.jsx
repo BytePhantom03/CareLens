@@ -28,18 +28,17 @@ function AppShell() {
   const { session } = useAuth();
   const [activeTab, setActiveTab] = useState('single');
   
-  // Single Check State
   const [note, setNote] = useState('');
   const [dayNumber, setDayNumber] = useState(1);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [analysisPhase, setAnalysisPhase] = useState(0);
+  const [showResult, setShowResult] = useState(false);
 
-  // Excel Import State
   const [pipelineInputs, setPipelineInputs] = useState(null);
   const [isProcessingBatch, setIsProcessingBatch] = useState(false);
 
-  // Toast notification state
   const [showToast, setShowToast] = useState(false);
 
   const allowedTabs = session && session.role && ROLES[session.role] ? ROLES[session.role].tabs : ['single'];
@@ -47,7 +46,6 @@ function AppShell() {
   const isSingleAllowed = allowedTabs.includes('single');
   const isExcelAllowed = allowedTabs.includes('batch') || allowedTabs.includes('excelImport');
 
-  // If activeTab is not allowed, switch to a valid tab
   if (activeTab === 'single' && !isSingleAllowed && isExcelAllowed) {
     setActiveTab('excel');
   } else if (activeTab === 'excel' && !isExcelAllowed && isSingleAllowed) {
@@ -63,6 +61,12 @@ function AppShell() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setShowResult(false);
+    setAnalysisPhase(0);
+
+    // Visual analysis phases (purely cosmetic)
+    const phaseTimer1 = setTimeout(() => setAnalysisPhase(1), 1200);
+    const phaseTimer2 = setTimeout(() => setAnalysisPhase(2), 2800);
 
     try {
       const res = await checkNote(note, dayNumber);
@@ -73,10 +77,15 @@ function AppShell() {
         dayNumber: dayNumber,
         ...res
       }, 'single');
+      // Trigger staggered reveal
+      setTimeout(() => setShowResult(true), 50);
     } catch (err) {
       setError(err.message || 'Failed to check note. The AI service may be temporarily unavailable.');
     } finally {
+      clearTimeout(phaseTimer1);
+      clearTimeout(phaseTimer2);
       setLoading(false);
+      setAnalysisPhase(0);
     }
   };
 
@@ -224,8 +233,46 @@ function AppShell() {
             )}
           </button>
 
+          {/* Streaming-like analysis progress */}
+          {loading && (
+            <div className="analysis-progress">
+              <div className={`analysis-step ${analysisPhase >= 0 ? 'active' : ''}`}>
+                <div className="analysis-step-icon">
+                  {analysisPhase > 0 ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  ) : (
+                    <span className="analysis-spinner" />
+                  )}
+                </div>
+                <span>Parsing progress note…</span>
+              </div>
+              <div className={`analysis-step ${analysisPhase >= 1 ? 'active' : ''}`}>
+                <div className="analysis-step-icon">
+                  {analysisPhase > 1 ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  ) : analysisPhase === 1 ? (
+                    <span className="analysis-spinner" />
+                  ) : (
+                    <span className="analysis-dot" />
+                  )}
+                </div>
+                <span>Checking against POL-FAL-001 policy…</span>
+              </div>
+              <div className={`analysis-step ${analysisPhase >= 2 ? 'active' : ''}`}>
+                <div className="analysis-step-icon">
+                  {analysisPhase >= 2 ? (
+                    <span className="analysis-spinner" />
+                  ) : (
+                    <span className="analysis-dot" />
+                  )}
+                </div>
+                <span>Generating compliance flags…</span>
+              </div>
+            </div>
+          )}
+
           {result && (
-            <div className="results-container" style={{ position: 'relative' }}>
+            <div className={`results-container ${showResult ? 'stream-reveal' : ''}`} style={{ position: 'relative' }}>
               <div style={{ position: 'absolute', top: '1rem', right: '1.5rem', zIndex: 10 }}>
                   <button className="btn-secondary" onClick={copyToClipboard}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

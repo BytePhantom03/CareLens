@@ -117,6 +117,17 @@ body::before {
   z-index: 0;
 }
 
+/* Subtle dot grid overlay for depth */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 0;
+}
+
 #root {
   position: relative;
   z-index: 1;
@@ -512,6 +523,14 @@ th {
   border: 1px solid var(--error-border);
   font-size: 0.9rem;
   animation: fadeInUp 0.3s ease-out;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+
+.error-banner svg {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
 }
 
 .error-banner h4 {
@@ -713,10 +732,32 @@ th {
   gap: var(--space-lg);
   padding: var(--space-lg) var(--space-xl);
   background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: var(--radius-lg);
   border: 1px solid var(--bg-glass-border);
   margin-bottom: var(--space-xl);
   animation: fadeInUp 0.3s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated shimmer stripe along the bottom */
+.processing-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary), #8b5cf6, transparent);
+  background-size: 200% 100%;
+  animation: shimmerSlide 2s linear infinite;
+}
+
+@keyframes shimmerSlide {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .processing-info {
@@ -792,6 +833,12 @@ th {
   box-shadow: var(--shadow-md);
   overflow: hidden;
   animation: fadeInUp 0.4s ease-out both;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.resident-report:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-lg), 0 0 30px rgba(99, 102, 241, 0.04);
 }
 
 .resident-report .results-header {
@@ -903,17 +950,17 @@ th {
   bottom: 2rem;
   right: 2rem;
   padding: 0.75rem 1.25rem;
-  background: var(--bg-elevated);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--bg-glass-border);
   border-radius: var(--radius-md);
   color: var(--text);
   font-size: 0.9rem;
   font-weight: 500;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-lg), 0 0 40px rgba(0, 0, 0, 0.3);
   z-index: 1000;
-  animation: toastIn 0.35s ease-out, toastOut 0.35s ease-in 1.65s forwards;
+  animation: toastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1), toastOut 0.35s ease-in 1.65s forwards;
   display: flex;
   align-items: center;
   gap: var(--space-sm);
@@ -921,6 +968,7 @@ th {
 
 .toast.toast-success {
   border-left: 3px solid var(--success);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(16, 185, 129, 0.1);
 }
 
 /* ---------- Section Title ---------- */
@@ -940,6 +988,319 @@ th {
   flex-direction: column;
   gap: var(--space-xl);
 }
+
+/* ---------- Batch Progress Bar ---------- */
+.batch-progress {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  margin-top: var(--space-sm);
+}
+
+.batch-progress-fill {
+  height: 100%;
+  background: var(--primary-gradient);
+  border-radius: var(--radius-pill);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.batch-progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  animation: shimmerSlide 1.5s linear infinite;
+}
+
+/* ============================================================
+   Streaming Analysis Progress
+   ============================================================ */
+.analysis-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: var(--space-lg);
+  padding: var(--space-lg);
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--bg-glass-border);
+  border-radius: var(--radius-lg);
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.analysis-step {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  opacity: 0.4;
+  transform: translateX(-8px);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.analysis-step.active {
+  opacity: 1;
+  color: var(--text-secondary);
+  transform: translateX(0);
+}
+
+.analysis-step-icon {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.analysis-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(99, 102, 241, 0.2);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.analysis-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+/* ============================================================
+   Stream-Reveal — Staggered Row Animation
+   ============================================================ */
+.stream-reveal .flag-row {
+  animation: streamRowIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.stream-reveal .flag-row:nth-child(1)  { animation-delay: 0.05s; }
+.stream-reveal .flag-row:nth-child(2)  { animation-delay: 0.12s; }
+.stream-reveal .flag-row:nth-child(3)  { animation-delay: 0.19s; }
+.stream-reveal .flag-row:nth-child(4)  { animation-delay: 0.26s; }
+.stream-reveal .flag-row:nth-child(5)  { animation-delay: 0.33s; }
+.stream-reveal .flag-row:nth-child(6)  { animation-delay: 0.40s; }
+.stream-reveal .flag-row:nth-child(7)  { animation-delay: 0.47s; }
+.stream-reveal .flag-row:nth-child(8)  { animation-delay: 0.54s; }
+.stream-reveal .flag-row:nth-child(9)  { animation-delay: 0.61s; }
+.stream-reveal .flag-row:nth-child(10) { animation-delay: 0.68s; }
+
+@keyframes streamRowIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    background: rgba(99, 102, 241, 0.08);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   Resident Panel — Sidebar + Detail Layout
+   ============================================================ */
+.resident-panel {
+  display: flex;
+  gap: var(--space-lg);
+  margin-top: var(--space-lg);
+  min-height: 300px;
+}
+
+/* --- Sidebar --- */
+.resident-sidebar {
+  width: 240px;
+  min-width: 240px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--bg-glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.resident-sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.resident-sidebar-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.resident-sidebar-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 0.4rem;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #818cf8;
+}
+
+.resident-sidebar-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-xs);
+}
+
+/* --- Tab Buttons --- */
+.resident-tab {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: inherit;
+  text-align: left;
+  color: var(--text-secondary);
+  animation: fadeInUp 0.3s ease-out both;
+  position: relative;
+  overflow: hidden;
+}
+
+.resident-tab::after {
+  display: none;
+}
+
+.resident-tab:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border);
+  color: var(--text);
+  transform: none;
+  box-shadow: none;
+}
+
+.resident-tab.active {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.2);
+  color: var(--text);
+  box-shadow: none;
+  transform: none;
+}
+
+/* Status dots */
+.resident-tab-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.resident-tab-dot--complete {
+  background: var(--success);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+}
+
+.resident-tab-dot--flagged {
+  background: var(--warning);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+}
+
+.resident-tab-dot--error {
+  background: var(--error);
+  box-shadow: 0 0 6px rgba(244, 63, 94, 0.4);
+}
+
+/* Tab text */
+.resident-tab-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.resident-tab-name {
+  font-size: 0.88rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resident-tab-meta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.resident-tab-arrow {
+  color: var(--primary);
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* --- Detail area --- */
+.resident-detail {
+  flex: 1;
+  min-width: 0;
+}
+
+.resident-detail .resident-report {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+/* --- Responsive: stack on narrow screens --- */
+@media (max-width: 768px) {
+  .resident-panel {
+    flex-direction: column;
+  }
+
+  .resident-sidebar {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .resident-sidebar-list {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: var(--space-xs);
+    gap: var(--space-xs);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .resident-tab {
+    flex-shrink: 0;
+    min-width: 140px;
+  }
+}
+
 
 /* ---------- Animations ---------- */
 @keyframes fadeInUp {

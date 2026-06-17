@@ -1,148 +1,258 @@
+/* ============================================================
+   Analytics Dashboard — Polished Styles
+   Uses design tokens from App.css :root
+   ============================================================ */
+
+/* ---------- Dashboard Container ---------- */
 .analytics-dashboard {
-  padding: 1.5rem;
-  animation: fadeIn 0.3s ease-out;
+  padding: var(--space-lg);
+  animation: fadeInUp 0.4s ease-out both;
 }
 
+/* ---------- Header ---------- */
 .analytics-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: var(--space-xl);
 }
 
 .analytics-header h2 {
   font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 700;
+  color: var(--text);
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
+/* ---------- Clear Button ---------- */
 .clear-btn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-sm);
   padding: 0.5rem 1rem;
   font-size: 0.85rem;
   color: var(--error);
-  border-color: rgba(239, 68, 68, 0.2);
+  background: transparent;
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .clear-btn:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(244, 63, 94, 0.08);
+  border-color: rgba(244, 63, 94, 0.35);
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.1);
+  transform: translateY(-1px);
 }
 
+.clear-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.clear-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  color: var(--text-muted);
+  border-color: var(--border);
+  background: transparent;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ---------- Empty State ---------- */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  padding: 5rem 2.5rem;
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--bg-glass-border);
+  border-radius: var(--radius-lg);
   color: var(--text-secondary);
   text-align: center;
+  animation: fadeInUp 0.5s ease-out both;
 }
 
 .empty-state svg {
-  margin-bottom: 1rem;
-  opacity: 0.5;
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--space-lg);
+  padding: 1rem;
+  background: var(--primary-gradient);
+  border-radius: var(--radius-lg);
+  color: white;
+  opacity: 0.85;
+  box-shadow: var(--shadow-glow);
 }
 
+.empty-state p {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  max-width: 320px;
+  line-height: 1.6;
+}
+
+/* ---------- Dashboard Grid ---------- */
 .dashboard-grid {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: var(--space-xl);
 }
 
+/* ---------- Metrics Cards Grid ---------- */
 .metrics-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
+  gap: var(--space-lg);
 }
 
+/* ---------- Individual Metric Card ---------- */
 .metric-card {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
+  gap: var(--space-lg);
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--bg-glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-md);
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base),
+    border-color var(--transition-base);
+  animation: metricCardIn 0.5s ease-out both;
+}
+
+/* Staggered entrance for metric cards */
+.metric-card:nth-child(1) { animation-delay: 0s; }
+.metric-card:nth-child(2) { animation-delay: 0.08s; }
+.metric-card:nth-child(3) { animation-delay: 0.16s; }
+.metric-card:nth-child(4) { animation-delay: 0.24s; }
+.metric-card:nth-child(5) { animation-delay: 0.32s; }
+.metric-card:nth-child(6) { animation-delay: 0.4s; }
+
+@keyframes metricCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .metric-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 20px var(--primary-glow);
+  border-color: var(--border-hover);
 }
 
+/* ---------- Metric Icon ---------- */
 .metric-icon {
   width: 56px;
   height: 56px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  transition: transform var(--transition-base);
+}
+
+.metric-card:hover .metric-icon {
+  transform: scale(1.08);
 }
 
 .metric-icon.blue {
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(59, 130, 246, 0.12);
   color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .metric-icon.green {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.12);
   color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .metric-icon.orange {
-  background: rgba(245, 158, 11, 0.1);
+  background: rgba(245, 158, 11, 0.12);
   color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
 .metric-icon.red {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.12);
   color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
+/* ---------- Metric Content ---------- */
 .metric-content h3 {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
   margin: 0 0 0.25rem 0;
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .metric-value {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text);
+  letter-spacing: -0.02em;
 }
 
+/* ---------- Dashboard Sections ---------- */
 .dashboard-section {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 1.5rem;
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--bg-glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-md);
+  transition: border-color var(--transition-base);
+  animation: fadeInUp 0.5s ease-out both;
+  animation-delay: 0.15s;
+}
+
+.dashboard-section:hover {
+  border-color: var(--border-hover);
 }
 
 .dashboard-section h3 {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 1.5rem 0;
+  color: var(--text);
+  margin: 0 0 var(--space-lg) 0;
 }
 
+/* ---------- Perfect Score ---------- */
 .perfect-score {
-  color: #10b981;
+  color: var(--success);
   font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-sm);
 }
 
+/* ---------- Bar Chart ---------- */
 .bar-chart {
   display: flex;
   flex-direction: column;
@@ -152,8 +262,21 @@
 .bar-row {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-sm);
+  animation: fadeInUp 0.4s ease-out both;
 }
+
+/* Staggered bar entrance */
+.bar-row:nth-child(1) { animation-delay: 0.05s; }
+.bar-row:nth-child(2) { animation-delay: 0.1s; }
+.bar-row:nth-child(3) { animation-delay: 0.15s; }
+.bar-row:nth-child(4) { animation-delay: 0.2s; }
+.bar-row:nth-child(5) { animation-delay: 0.25s; }
+.bar-row:nth-child(6) { animation-delay: 0.3s; }
+.bar-row:nth-child(7) { animation-delay: 0.35s; }
+.bar-row:nth-child(8) { animation-delay: 0.4s; }
+.bar-row:nth-child(9) { animation-delay: 0.45s; }
+.bar-row:nth-child(10) { animation-delay: 0.5s; }
 
 .bar-label {
   display: flex;
@@ -162,24 +285,218 @@
 }
 
 .field-name {
-  color: var(--text-primary);
+  color: var(--text);
   font-weight: 500;
 }
 
 .field-count {
   color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 .bar-track {
-  height: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
+  height: 10px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-pill);
   overflow: hidden;
 }
 
 .bar-fill {
   height: 100%;
   background: linear-gradient(90deg, #ef4444, #f87171);
-  border-radius: 4px;
+  border-radius: var(--radius-pill);
   transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: barGrow 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  position: relative;
 }
+
+.bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    transparent 100%
+  );
+  border-radius: inherit;
+}
+
+@keyframes barGrow {
+  from {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .analytics-dashboard {
+    padding: var(--space-md);
+  }
+
+  .analytics-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
+
+  .analytics-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .metrics-cards {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .metric-card {
+    padding: var(--space-md);
+  }
+
+  .metric-value {
+    font-size: 1.6rem;
+  }
+
+  .dashboard-section {
+    padding: var(--space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .analytics-dashboard {
+    padding: var(--space-sm);
+  }
+
+  .empty-state {
+    padding: 3rem var(--space-lg);
+  }
+
+  .metric-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .clear-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ---------- Analytics Subtitle ---------- */
+.analytics-subtitle {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* ---------- Enhanced Empty State ---------- */
+.empty-state-icon {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-gradient);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-lg);
+  box-shadow: var(--shadow-glow);
+}
+
+.empty-state-icon svg {
+  width: 32px;
+  height: 32px;
+  color: white;
+  background: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  opacity: 1;
+}
+
+.empty-state-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 var(--space-sm) 0;
+}
+
+.empty-state-desc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  max-width: 360px;
+  line-height: 1.6;
+  margin: 0 0 var(--space-lg) 0;
+}
+
+.empty-state-hints {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.empty-state-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.35rem 0.75rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.empty-state-hint svg {
+  width: 14px;
+  height: 14px;
+  color: var(--primary);
+  background: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  opacity: 1;
+}
+
+/* ---------- Metric Unit Suffix ---------- */
+.metric-unit {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-left: 0.1rem;
+}
+
+/* Tabular nums for animated counters */
+.metric-value {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Section Header ---------- */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+}
+
+.section-header h3 {
+  margin: 0;
+}
+
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+

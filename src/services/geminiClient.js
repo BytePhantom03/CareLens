@@ -222,10 +222,9 @@ export async function callGemini(systemPrompt, userPrompt, responseSchema = null
       if (err.status === 429 || err.status === 503 || (err.message && err.message.includes('RATE_LIMIT'))) {
         console.warn(`[${provider.name}] Rate limit hit. Cooling down for 15s.`);
         setProviderCooldown(provider.name, 15);
-        continue; // Fall through immediately to next provider
+        continue;
       }
 
-      // For other errors, just try the next provider
       continue;
     }
   }

@@ -1,135 +1,279 @@
+/* ============================================================
+   UserMenu — Premium glassmorphism dropdown
+   Uses design tokens from App.css :root
+   ============================================================ */
+
+/* ---------- Container ---------- */
 .user-menu {
   position: absolute;
   top: 0;
   right: 0;
+  z-index: 50;
 }
 
+/* ---------- Trigger Button ---------- */
 .user-menu-trigger {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 20px;
+  background: var(--bg-glass);
+  border: 1px solid var(--bg-glass-border);
+  border-radius: var(--radius-pill);
   padding: 0.25rem 1rem 0.25rem 0.25rem;
   cursor: pointer;
   color: var(--text);
+  font-family: inherit;
   font-weight: 500;
-  transition: background-color 0.2s, border-color 0.2s;
+  font-size: 0.9rem;
+  position: relative;
+  overflow: visible;
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+/* Neutralise the global button::after overlay on trigger */
+.user-menu-trigger::after {
+  display: none;
 }
 
 .user-menu-trigger:hover {
-  background: var(--surface);
-  border-color: #8b5cf6;
+  background: var(--bg-surface-hover);
+  border-color: var(--border-hover);
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.1);
+  transform: none;
 }
 
+.user-menu-trigger:active {
+  transform: scale(0.97);
+}
+
+/* ---------- Avatar ---------- */
 .user-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid transparent;
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
+/* Subtle ring + glow on hover */
+.user-menu-trigger:hover .user-avatar {
+  border-color: var(--primary);
+  box-shadow: 0 0 10px var(--primary-glow), 0 0 20px rgba(99, 102, 241, 0.12);
+}
+
+/* ---------- Dropdown Card ---------- */
 .user-menu-dropdown {
   position: absolute;
-  top: calc(100% + 0.5rem);
+  top: calc(100% + 0.625rem);
   right: 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1rem;
-  width: 260px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  width: 280px;
+  padding: var(--space-lg);
   z-index: 100;
-  animation: fadeSlideUp 0.2s ease-out;
+
+  /* Glassmorphism */
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--bg-glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 40px rgba(99, 102, 241, 0.06);
+
+  /* Fixed animation name (matches App.css @keyframes fadeInUp) */
+  animation: fadeInUp 0.25s ease-out;
 }
 
+/* ---------- Email ---------- */
 .user-menu-email {
   color: var(--text);
   font-size: 0.9rem;
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-  word-break: break-all;
-}
-
-.user-menu-role-badge {
-  display: inline-block;
-  background: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-xs);
+  word-break: break-all;
+  line-height: 1.4;
 }
 
+/* ---------- Role Badge ---------- */
+.user-menu-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary-hover, #818cf8);
+  padding: 0.2rem 0.6rem;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: var(--space-lg);
+}
+
+/* ---------- Action Button ---------- */
 .user-menu-action-btn {
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.6rem 0.75rem;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   color: var(--text);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s, border-color 0.2s;
+  gap: var(--space-sm);
+  font-family: inherit;
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  position: relative;
+  overflow: hidden;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+/* Neutralise global button::after on action button */
+.user-menu-action-btn::after {
+  display: none;
 }
 
 .user-menu-action-btn:hover {
-  background: var(--surface);
-  border-color: #8b5cf6;
+  background: var(--bg-surface-hover);
+  border-color: var(--border-hover);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  transform: none;
 }
 
+/* ---------- Logout Button ---------- */
 .user-menu-logout-btn {
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.6rem 0.75rem;
   background: transparent;
   border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--text);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: background-color 0.2s;
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  position: relative;
+  overflow: hidden;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+/* Neutralise global button::after */
+.user-menu-logout-btn::after {
+  display: none;
 }
 
 .user-menu-logout-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  border-color: #ef4444;
+  background: var(--error-bg);
+  color: var(--error);
+  border-color: var(--error-border);
+  transform: none;
 }
 
+/* ---------- Logout Confirm Section ---------- */
 .logout-confirm {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding-top: 0.5rem;
+  padding-top: var(--space-md);
+  margin-top: var(--space-sm);
   border-top: 1px solid var(--border);
 }
 
 .logout-confirm-text {
-  font-size: 0.9rem;
-  color: var(--text);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 .logout-confirm-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-sm);
 }
 
+/* ---------- Logout Confirm Button (Danger) ---------- */
 .logout-confirm-btn {
   flex: 1;
-  background: #ef4444;
+  background: var(--error);
   color: white;
   border: none;
-  border-radius: 4px;
-  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  padding: 0.55rem 0.75rem;
   cursor: pointer;
-  font-weight: 500;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  position: relative;
+  overflow: hidden;
+  transition:
+    background-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.logout-confirm-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
 }
 
 .logout-confirm-btn:hover {
   background: #dc2626;
+  transform: scale(1.03);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+}
+
+.logout-confirm-btn:hover::after {
+  opacity: 1;
+}
+
+.logout-confirm-btn:active {
+  transform: scale(0.98);
+}
+
+/* ---------- Mobile Responsive ---------- */
+@media (max-width: 640px) {
+  .user-menu-trigger {
+    padding: 0.2rem 0.6rem 0.2rem 0.2rem;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .user-menu-dropdown {
+    width: calc(100vw - 2rem);
+    right: -0.5rem;
+    padding: var(--space-md);
+  }
+
+  .logout-confirm-actions {
+    flex-direction: column;
+  }
 }

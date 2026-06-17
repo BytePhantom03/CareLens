@@ -11,6 +11,7 @@ export default function BatchMode({ pipelineInputs, onReset }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentLabel, setCurrentLabel] = useState('');
   const [batchError, setBatchError] = useState(null);
+  const [selectedResident, setSelectedResident] = useState(null);
   const isCancelled = useRef(false);
   const hasStarted = useRef(false);
 
@@ -29,6 +30,7 @@ export default function BatchMode({ pipelineInputs, onReset }) {
     setCurrentIndex(0);
     setCurrentLabel('');
     setBatchError(null);
+    setSelectedResident(null);
 
     try {
       const finalResults = await runBatchChecks(
@@ -58,7 +60,26 @@ export default function BatchMode({ pipelineInputs, onReset }) {
     : 0;
 
   const grouped = groupResultsByResident(results);
+  const residentNames = Object.keys(grouped);
   const errorCount = results.filter(r => r.overall_status === 'error').length;
+
+  // Auto-select first resident when results arrive
+  useEffect(() => {
+    if (residentNames.length > 0 && !selectedResident) {
+      setSelectedResident(residentNames[0]);
+    }
+  }, [residentNames.length]);
+
+  const getResidentStatus = (dayResults) => {
+    const hasError = dayResults.some(d => d.overall_status === 'error' || d.status === 'error');
+    if (hasError) return 'error';
+    const hasFlags = dayResults.some(d => {
+      const flags = d.flags || (d.data && d.data.flags) || [];
+      return flags.some(f => f.flag_type === 'Missing' || f.flag_type === 'Incomplete' || f.flag_type === 'Vague');
+    });
+    if (hasFlags) return 'flagged';
+    return 'complete';
+  };
 
   return (
     <div className="batch-mode">
@@ -86,7 +107,6 @@ export default function BatchMode({ pipelineInputs, onReset }) {
         </div>
       </div>
 
-      {/* Processing spinner */}
       {isProcessing && (
         <div className="processing-card">
           <div className="circular-spinner"></div>
@@ -102,11 +122,13 @@ export default function BatchMode({ pipelineInputs, onReset }) {
             <div className="processing-fallback">
               Auto-retrying on rate limits — using GitHub → Groq → Gemini fallback chain
             </div>
+            <div className="batch-progress">
+              <div className="batch-progress-fill" style={{ width: `${progressPercentage}%` }} />
+            </div>
           </div>
         </div>
       )}
 
-      {/* Batch-level fatal error */}
       {!isProcessing && batchError && (
         <div className="error-banner">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -118,7 +140,6 @@ export default function BatchMode({ pipelineInputs, onReset }) {
         </div>
       )}
 
-      {/* Completion banner */}
       {!isProcessing && results.length > 0 && (
         <div className={`completion-banner ${errorCount > 0 ? 'has-errors' : 'success'}`}>
           {errorCount > 0 ? (
@@ -142,16 +163,53 @@ export default function BatchMode({ pipelineInputs, onReset }) {
         </div>
       )}
 
-      {/* Results tables */}
-      {!isProcessing && results.length > 0 && (
-        <div className="batch-tables">
-          {Object.entries(grouped).map(([residentName, dayResults]) => (
-            <ResidentReportTable
-              key={residentName}
-              residentName={residentName}
-              dayResults={dayResults}
-            />
-          ))}
+      {/* Tabbed Resident Selector + Detail View */}
+      {!isProcessing && results.length > 0 && residentNames.length > 0 && (
+        <div className="resident-panel">
+          {/* Sidebar — Resident list */}
+          <div className="resident-sidebar">
+            <div className="resident-sidebar-header">
+              <span className="resident-sidebar-title">Residents</span>
+              <span className="resident-sidebar-count">{residentNames.length}</span>
+            </div>
+            <div className="resident-sidebar-list">
+              {residentNames.map((name, idx) => {
+                const status = getResidentStatus(grouped[name]);
+                return (
+                  <button
+                    key={name}
+                    className={`resident-tab ${selectedResident === name ? 'active' : ''}`}
+                    onClick={() => setSelectedResident(name)}
+                    style={{ animationDelay: `${idx * 0.05}s` }}
+                  >
+                    <span className={`resident-tab-dot resident-tab-dot--${status}`} />
+                    <div className="resident-tab-info">
+                      <span className="resident-tab-name">{name}</span>
+                      <span className="resident-tab-meta">
+                        {grouped[name].length} day{grouped[name].length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    {selectedResident === name && (
+                      <svg className="resident-tab-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Main content — Selected resident's report */}
+          <div className="resident-detail">
+            {selectedResident && grouped[selectedResident] && (
+              <ResidentReportTable
+                key={selectedResident}
+                residentName={selectedResident}
+                dayResults={grouped[selectedResident]}
+              />
+            )}
+          </div>
         </div>
       )}
     </div>
