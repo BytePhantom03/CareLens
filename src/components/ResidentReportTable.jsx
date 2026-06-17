@@ -44,30 +44,48 @@ export default function ResidentReportTable({ residentName, dayResults }) {
     }));
   });
 
+  const getBadgeClass = (flagType) => {
+    switch (flagType) {
+      case 'Missing': return 'flag-badge flag-missing';
+      case 'Vague': return 'flag-badge flag-vague';
+      case 'Incomplete': return 'flag-badge flag-vague';
+      case 'Complete': return 'flag-badge flag-complete';
+      default: return '';
+    }
+  };
+
   return (
     <div className="resident-report">
-      <div className="results-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
+      <div className="results-header">
         <h3>Checker Output — {residentName}</h3>
       </div>
-      <p className="report-subtitle" style={{ padding: '0 1.5rem 1rem 1.5rem', margin: 0, color: 'var(--text-light)' }}>
+      <p className="report-subtitle">
         All {sortedDays.length} day(s) reviewed against the Falls Management Policy.
       </p>
       <table className="report-table">
         <thead>
           <tr>
-            <th style={{ width: '10%' }}>Day</th>
-            <th style={{ width: '15%' }}>Flag Type</th>
-            <th style={{ width: '25%' }}>Field</th>
-            <th style={{ width: '50%' }}>Explanation</th>
+            <th>Day</th>
+            <th>Flag Type</th>
+            <th>Field</th>
+            <th>Explanation</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
             <tr key={i} className={`flag-row flag-row--${row.flagType.toLowerCase()}`}>
               <td style={{ fontWeight: 500 }}>{row.dayLabel}</td>
-              <td>{FLAG_ICON[row.flagType] || ''} {row.flagType}</td>
+              <td>
+                {getBadgeClass(row.flagType) ? (
+                  <span className={getBadgeClass(row.flagType)}>
+                    {FLAG_ICON[row.flagType]} {row.flagType}
+                  </span>
+                ) : (
+                  <>{FLAG_ICON[row.flagType] || ''} {row.flagType}</>
+                )}
+              </td>
               <td style={{ fontWeight: 500 }}>{row.field}</td>
-              <td style={{ color: 'var(--text-light)' }}>{row.explanation}</td>
+              <td>{row.explanation}</td>
             </tr>
           ))}
         </tbody>

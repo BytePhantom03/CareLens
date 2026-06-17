@@ -1,0 +1,61 @@
+.login-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: var(--background);
+}
+
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 3rem;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.login-icon-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.login-icon {
+  width: 48px;
+  height: 48px;
+}
+
+.login-title {
+  font-size: 1.5rem;
+  color: var(--text);
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+}
+
+.login-subtitle {
+  color: var(--text-light);
+  margin: 0 0 2rem 0;
+  font-size: 0.95rem;
+}
+
+.google-button-slot {
+  display: flex;
+  justify-content: center;
+  min-height: 40px; /* reserve space for button */
+}
+
+/* Animations */
+.login-card--animate-in {
+  animation: fadeSlideUp 0.5s ease-out;
+}
+.login-card--animate-in-delayed {
+  animation: fadeSlideUp 0.5s ease-out 0.25s backwards;
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

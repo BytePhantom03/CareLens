@@ -9,7 +9,21 @@ import ExtractionPreview from './components/ExtractionPreview';
 import BatchMode from './components/BatchMode';
 import ResidentReportTable from './components/ResidentReportTable';
 
-function App() {
+import { AuthProvider, useAuth } from './auth/AuthContext';
+import LoginScreen from './components/LoginScreen/LoginScreen';
+import RoleSelector from './components/RoleSelector/RoleSelector';
+import UserMenu from './components/UserMenu/UserMenu';
+import { ROLES } from './auth/roleConfig';
+
+function AuthGate({ children }) {
+  const { isAuthenticated, session } = useAuth();
+  if (!isAuthenticated) return <LoginScreen />;
+  if (!session.role) return <RoleSelector />;
+  return children;
+}
+
+function AppShell() {
+  const { session } = useAuth();
   const [activeTab, setActiveTab] = useState('single');
   
   // Single Check State
@@ -25,6 +39,13 @@ function App() {
 
   // Toast notification state
   const [showToast, setShowToast] = useState(false);
+
+  const allowedTabs = session && session.role && ROLES[session.role] ? ROLES[session.role].tabs : ['single'];
+
+  // If activeTab is not allowed, switch to the first allowed tab
+  if (!allowedTabs.includes(activeTab) && allowedTabs.length > 0) {
+    setActiveTab(allowedTabs[0]);
+  }
 
   const handleCheck = async () => {
     if (!note || note.trim().length < 10) {
@@ -89,27 +110,33 @@ function App() {
         </h1>
         <p className="subtitle">Automated compliance checking powered by AI</p>
         <div className="policy-badge">POL-FAL-001 · v1.0</div>
+        <UserMenu />
       </header>
 
       <div className="tabs">
-        <button 
-          className={`tab ${activeTab === 'single' ? 'active' : ''}`}
-          onClick={() => setActiveTab('single')}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '0.4rem'}}>
-            <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-          </svg>
-          Single Check
-        </button>
-        <button 
-          className={`tab ${activeTab === 'excel' ? 'active' : ''}`}
-          onClick={() => setActiveTab('excel')}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '0.4rem'}}>
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-          </svg>
-          Excel Import
-        </button>
+        {allowedTabs.includes('single') && (
+          <button 
+            className={`tab ${activeTab === 'single' ? 'active' : ''}`}
+            onClick={() => setActiveTab('single')}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '0.4rem'}}>
+              <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            Single Check
+          </button>
+        )}
+        
+        {(allowedTabs.includes('batch') || allowedTabs.includes('excelImport')) && (
+          <button 
+            className={`tab ${activeTab === 'excel' ? 'active' : ''}`}
+            onClick={() => setActiveTab('excel')}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '0.4rem'}}>
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            Excel Import
+          </button>
+        )}
       </div>
 
       <div style={{ display: activeTab === 'single' ? 'block' : 'none' }}>
@@ -230,4 +257,12 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <AuthProvider>
+      <AuthGate>
+        <AppShell />
+      </AuthGate>
+    </AuthProvider>
+  );
+}
