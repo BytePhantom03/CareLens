@@ -12,14 +12,51 @@ export async function parseFallsWorkbook(file) {
   for (const sheetName of workbook.SheetNames) {
     const sheet = workbook.Sheets[sheetName];
     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+    
+    if (!rows || rows.length === 0) continue;
 
+    // Detect flat table format: Columns 'Resident', 'Day', 'Progress Note Text'
+    const headerRow = rows[0].map(c => (c || '').toString().trim());
+    const isFlatTable = headerRow.some(c => /Resident/i.test(c)) && headerRow.some(c => /Day/i.test(c));
+
+    if (isFlatTable) {
+       const resCol = headerRow.findIndex(c => /Resident/i.test(c));
+       const dayCol = headerRow.findIndex(c => /Day/i.test(c));
+       const noteCol = headerRow.findIndex(c => /Progress Note/i.test(c));
+       
+       for (let i = 1; i < rows.length; i++) {
+          const r = rows[i];
+          const resName = (r[resCol] || '').toString().trim();
+          if (!resName) continue;
+          
+          const dayMatch = DAY_REGEX.exec(r[dayCol] || '');
+          const dayNumber = dayMatch ? parseInt(dayMatch[1], 10) : null;
+          const progressNote = noteCol >= 0 ? (r[noteCol] || '').toString().trim() : '';
+          
+          if (dayNumber && progressNote.length >= 10) {
+             let resObj = residents.find(x => x.residentName === resName);
+             if (!resObj) {
+               resObj = { residentName: resName, room: null, dob: null, sourceSheet: sheetName, days: [] };
+               residents.push(resObj);
+             }
+             resObj.days.push({
+               dayNumber,
+               date: '',
+               documentedBy: '',
+               progressNote
+             });
+          }
+       }
+       continue;
+    }
+
+    // Original blueprint structured format
     const titleRow = rows.find(r => /Progress Notes/i.test(r[0] || ''));
     const headerRowIndex = rows.findIndex(r => /^Day$/i.test((r[0] || '').toString().trim()));
 
     if (!titleRow || headerRowIndex === -1) {
-      // Silently skip non-falls sheets like "Instructions"
       if (sheetName.toLowerCase().includes('instruction') || sheetName.toLowerCase().includes('cover')) continue;
-      parseErrors.push({ sheet: sheetName, reason: 'Could not locate title or header row' });
+      parseErrors.push({ sheet: sheetName, reason: 'Could not locate valid headers or flat table' });
       continue;
     }
 
@@ -28,7 +65,6 @@ export async function parseFallsWorkbook(file) {
     const room = titleMatch ? titleMatch[2].trim() : null;
     const dob = titleMatch ? titleMatch[3].trim() : null;
 
-    // Read day rows beneath header dynamically
     const dayRows = [];
     for (let i = headerRowIndex + 1; i < rows.length; i++) {
         if (DAY_REGEX.test(rows[i][0] || '')) {
@@ -38,7 +74,6 @@ export async function parseFallsWorkbook(file) {
 
     const days = dayRows.map(r => {
       const dayMatch = DAY_REGEX.exec(r[0] || '');
-      // Handle numeric Excel date codes
       let dateValue = r[1];
       if (typeof dateValue === 'number') {
          const d = XLSX.SSF.parse_date_code(dateValue);

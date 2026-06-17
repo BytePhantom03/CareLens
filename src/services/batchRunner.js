@@ -25,7 +25,7 @@ export async function runBatchChecks(pipelineInputs, onProgress, isCancelledRef,
     }
 
     if (i < pipelineInputs.length - 1) {
-      await new Promise(r => setTimeout(r, 500)); // respect rate limit
+      await new Promise(r => setTimeout(r, 1500)); // 1.5s between calls to respect rate limits
     }
   }
   return results;

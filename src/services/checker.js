@@ -29,10 +29,13 @@ export async function checkNote(note, dayNumber) {
     // Graceful fallback if AI omitted a key
     const data = extractedData[req.id] || {};
     const status = req.evaluate(data);
+    
+    const ruleDesc = Object.values(req.extractionSchema).map(s => s.description).join(' ');
+
     return {
       id: req.id,
       field: req.field,
-      rule: req.rule,
+      rule: ruleDesc,
       status: status, // "Complete" | "Missing" | "Vague"
     };
   });
