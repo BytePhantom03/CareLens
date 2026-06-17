@@ -4,13 +4,24 @@ import { checkNote } from './services/checker';
 import { SAMPLE_RESIDENTS } from './data/samples';
 import { exportToTSV } from './utils/export';
 
+import ExcelUploader from './components/ExcelUploader';
+import ExtractionPreview from './components/ExtractionPreview';
+import BatchMode from './components/BatchMode';
+import ResidentReportTable from './components/ResidentReportTable';
+
 function App() {
   const [activeTab, setActiveTab] = useState('single');
+  
+  // Single Check State
   const [note, setNote] = useState('');
   const [dayNumber, setDayNumber] = useState(1);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+
+  // Excel Import State
+  const [pipelineInputs, setPipelineInputs] = useState(null);
+  const [isProcessingBatch, setIsProcessingBatch] = useState(false);
 
   const handleCheck = async () => {
     if (!note || note.trim().length < 10) {
@@ -46,6 +57,21 @@ function App() {
     alert('Copied to clipboard!');
   };
 
+  const handleUploadSuccess = (inputs) => {
+    setPipelineInputs(inputs);
+    setIsProcessingBatch(false);
+  };
+
+  const handleRunAllChecks = (finalInputs) => {
+    setPipelineInputs(finalInputs);
+    setIsProcessingBatch(true);
+  };
+
+  const handleResetBatch = () => {
+    setPipelineInputs(null);
+    setIsProcessingBatch(false);
+  };
+
   return (
     <div className="app-container">
       <header>
@@ -61,10 +87,10 @@ function App() {
           Single Check
         </button>
         <button 
-          className={`tab ${activeTab === 'batch' ? 'active' : ''}`}
-          onClick={() => setActiveTab('batch')}
+          className={`tab ${activeTab === 'excel' ? 'active' : ''}`}
+          onClick={() => setActiveTab('excel')}
         >
-          Batch Mode
+          Excel Import (Batch)
         </button>
       </div>
 
@@ -104,49 +130,42 @@ function App() {
           </button>
 
           {result && (
-            <div className="results-container">
-              <div className="results-header">
-                <h3>Check Results: {result.day}</h3>
-                <div>
-                  <span className={`flag-badge flag-${result.overall_status === 'complete' ? 'complete' : 'missing'}`} style={{ marginRight: '1rem' }}>
-                    {result.overall_status === 'complete' ? '✅ Complete' : '⚠️ Has Issues'}
-                  </span>
-                  <button className="btn-secondary" onClick={copyToClipboard}>Copy as Table</button>
-                </div>
+            <div className="results-container" style={{ position: 'relative' }}>
+              <div style={{ position: 'absolute', top: '1rem', right: '1.5rem', zIndex: 10 }}>
+                  <button className="btn-secondary" onClick={copyToClipboard}>Copy as Table (TSV)</button>
               </div>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Flag Type</th>
-                    <th>Field</th>
-                    <th>Explanation</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.flags.map((flag, idx) => (
-                    <tr key={idx} className="flag-row">
-                      <td>
-                        <span className={`flag-badge flag-${flag.flag_type.toLowerCase()}`}>
-                          {flag.flag_type === 'Missing' && '🚩 '}
-                          {flag.flag_type === 'Vague' && '⚠️ '}
-                          {flag.flag_type === 'Complete' && '✅ '}
-                          {flag.flag_type}
-                        </span>
-                      </td>
-                      <td>{flag.field}</td>
-                      <td>{flag.explanation}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <ResidentReportTable 
+                residentName="Single Check Result" 
+                dayResults={[{ 
+                  dayNumber: dayNumber, 
+                  overall_status: result.overall_status, 
+                  flags: result.flags 
+                }]} 
+              />
             </div>
           )}
         </div>
       )}
 
-      {activeTab === 'batch' && (
-        <div>
-          <p>Batch Mode is under development.</p>
+      {activeTab === 'excel' && (
+        <div className="excel-import-view">
+          {!pipelineInputs && (
+            <ExcelUploader onUploadSuccess={handleUploadSuccess} />
+          )}
+          
+          {pipelineInputs && !isProcessingBatch && (
+            <ExtractionPreview 
+              initialInputs={pipelineInputs} 
+              onRunAll={handleRunAllChecks} 
+            />
+          )}
+
+          {pipelineInputs && isProcessingBatch && (
+            <BatchMode 
+              pipelineInputs={pipelineInputs} 
+              onReset={handleResetBatch} 
+            />
+          )}
         </div>
       )}
     </div>

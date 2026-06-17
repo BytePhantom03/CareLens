@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { checkNote } from '../services/checker';
+import { runBatchChecks } from '../services/batchRunner';
 import { exportBatchToExcel } from '../utils/exportToExcel';
+import { groupResultsByResident } from '../utils/groupResultsByResident';
+import ResidentReportTable from './ResidentReportTable';
 
 export default function BatchMode({ pipelineInputs, onReset }) {
   const [results, setResults] = useState([]);
@@ -15,40 +17,15 @@ export default function BatchMode({ pipelineInputs, onReset }) {
 
   const startBatch = async () => {
     setIsProcessing(true);
-    const newResults = [];
+    setResults([]);
+    setCurrentIndex(0);
 
-    for (let i = 0; i < pipelineInputs.length; i++) {
-      if (isCancelled.current) break;
-      setCurrentIndex(i);
-      const input = pipelineInputs[i];
-      
-      try {
-        const res = await checkNote(input.progressNote, input.dayNumber);
-        newResults.push({
-          ...input,
-          status: 'success',
-          data: res
-        });
-      } catch (err) {
-        newResults.push({
-          ...input,
-          status: 'error',
-          error: err.message
-        });
-      }
-      
-      setResults([...newResults]);
-      
-      // Delay to avoid hitting rate limits (500ms delay as specified)
-      if (i < pipelineInputs.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-    }
+    const finalResults = await runBatchChecks(pipelineInputs, (done, total, input) => {
+      setCurrentIndex(done);
+    }, isCancelled);
     
+    setResults(finalResults);
     setIsProcessing(false);
-    if (!isCancelled.current) {
-        setCurrentIndex(pipelineInputs.length);
-    }
   };
 
   const handleExport = () => {
@@ -59,12 +36,14 @@ export default function BatchMode({ pipelineInputs, onReset }) {
     ? Math.round((currentIndex / pipelineInputs.length) * 100) 
     : 0;
 
+  const grouped = groupResultsByResident(results);
+
   return (
     <div className="batch-mode">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <h3>Batch Processing Results</h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          {!isProcessing && (
+          {!isProcessing && results.length > 0 && (
             <button className="btn-secondary" onClick={handleExport}>Download Results (.xlsx)</button>
           )}
           <button className="btn-secondary" onClick={onReset} disabled={isProcessing}>Upload Another</button>
@@ -95,31 +74,17 @@ export default function BatchMode({ pipelineInputs, onReset }) {
         </div>
       )}
 
-      <div className="batch-grid">
-        {results.map((res, idx) => (
-          <div key={idx} className="resident-card">
-            <h4 style={{ margin: '0 0 0.5rem 0' }}>{res.residentName} <span style={{ color: 'var(--text-light)', fontWeight: 'normal', fontSize: '0.9rem' }}>| Day {res.dayNumber}</span></h4>
-            
-            {res.status === 'error' ? (
-              <div style={{ color: 'var(--flag-missing-text)' }}>Failed: {res.error}</div>
-            ) : (
-              <div>
-                <div style={{ marginBottom: '0.5rem' }}>
-                   <span className={`flag-badge flag-${res.data.overall_status === 'complete' ? 'complete' : 'missing'}`}>
-                      {res.data.overall_status === 'complete' ? '✅ Complete' : '⚠️ Has Issues'}
-                   </span>
-                </div>
-                {res.data.flags && res.data.flags.map((f, i) => (
-                  <div key={i} style={{ fontSize: '0.85rem', marginBottom: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>
-                    <strong>{f.flag_type === 'Missing' ? '🚩 ' : f.flag_type === 'Vague' ? '⚠️ ' : '✅ '}{f.field}</strong>
-                    <p style={{ margin: '0.2rem 0 0 0', color: 'var(--text-light)' }}>{f.explanation}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+      {!isProcessing && results.length > 0 && (
+        <div className="batch-tables" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          {Object.entries(grouped).map(([residentName, dayResults]) => (
+            <ResidentReportTable
+              key={residentName}
+              residentName={residentName}
+              dayResults={dayResults}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
