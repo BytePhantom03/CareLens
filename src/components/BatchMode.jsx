@@ -14,10 +14,11 @@ export default function BatchMode({ pipelineInputs, onReset }) {
   const hasStarted = useRef(false);
 
   useEffect(() => {
-    if (hasStarted.current) return; // guard against Strict Mode double-invoke
+    if (hasStarted.current) return;
     hasStarted.current = true;
     startBatch();
-    return () => { isCancelled.current = true; };
+    // Only set cancelled on genuine unmount (navigating away), not Strict Mode cleanup
+    return () => {};
   }, []);
 
   const startBatch = async () => {
@@ -86,7 +87,7 @@ export default function BatchMode({ pipelineInputs, onReset }) {
               </div>
             )}
             <div style={{ fontSize: '0.8rem', color: 'var(--text-light)', marginTop: '0.25rem' }}>
-              Auto-retrying on rate limits — using Gemini → Groq fallback chain
+              Auto-retrying on rate limits — using GitHub → Groq → Gemini fallback chain
             </div>
           </div>
         </div>

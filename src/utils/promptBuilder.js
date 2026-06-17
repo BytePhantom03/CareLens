@@ -1,10 +1,20 @@
-export function buildExtractionSystemPrompt(dayLabel) {
-  return `You are a clinical data extraction assistant for an aged care facility.
+export function buildExtractionSystemPrompt(dayLabel, schemaForPrompt = null) {
+  const base = `You are a clinical data extraction assistant for an aged care facility.
 Your task is to analyze a nurse's progress note and extract structured boolean flags based on specific policy requirements.
 This note is for: ${dayLabel}.
 If a field requires a specific numeric scale, confirm if that numeric scale is actually present in the text.
-Do not infer information that is not explicitly stated.
-Return only a JSON object matching the requested schema.`;
+Do not infer information that is not explicitly stated.`;
+
+  if (schemaForPrompt) {
+    return `${base}
+
+You MUST return a JSON object that EXACTLY matches this structure (use true/false for booleans):
+${JSON.stringify(schemaForPrompt, null, 2)}
+
+Return ONLY the JSON object. No explanation, no markdown, no code blocks.`;
+  }
+
+  return `${base}\nReturn only a JSON object matching the requested schema.`;
 }
 
 export function buildExtractionUserPrompt(note) {
@@ -13,7 +23,7 @@ export function buildExtractionUserPrompt(note) {
 ${note}
 """
 
-Extract the requested fields.`;
+Extract the requested fields. Carefully read the ENTIRE note before answering. Do not mark something as false if the information IS present in the note.`;
 }
 
 export function buildExtractionSchema(requirements) {
@@ -40,17 +50,41 @@ export function buildExtractionSchema(requirements) {
   };
 }
 
-export function buildExplanationSystemPrompt() {
-  return `You are a clinical documentation coach.
+// Build a plain JS object with default-false values to embed in the system prompt
+// for OpenAI-compatible providers that don't support Gemini-style schema constraints
+export function buildExtractionSchemaExample(requirements) {
+  const example = {};
+  for (const req of requirements) {
+    example[req.id] = {};
+    for (const key of Object.keys(req.extractionSchema)) {
+      example[req.id][key] = false;
+    }
+  }
+  return example;
+}
+
+export function buildExplanationSystemPrompt(schemaExample = null) {
+  const base = `You are a clinical documentation coach.
 Your task is to generate short, actionable explanations for why a progress note failed specific policy requirements.
 The explanation MUST reference the policy requirement, and point out exactly what is missing or vague in the note.
 Do not use clinical jargon. Keep it direct and nurse-friendly.
-Format: "Policy requires [X]. [What is missing/vague]."
-Return a JSON object where the key is the requirement ID and the value is the explanation string.`;
+Format: "Policy requires [X]. [What is missing/vague]."`;
+
+  if (schemaExample) {
+    return `${base}
+
+You MUST return a JSON object that EXACTLY matches this structure:
+${JSON.stringify(schemaExample, null, 2)}
+
+Return ONLY the JSON object. No explanation, no markdown, no code blocks.`;
+  }
+
+  return `${base}\nReturn a JSON object where the key is the requirement ID and the value is the explanation string.`;
 }
 
+
 export function buildExplanationUserPrompt(note, flags) {
-  const flagsText = flags.map(f => `- ${f.id} (${f.field}): Evaluated as ${f.status}. Rule: ${f.rule}`).join('\\n');
+  const flagsText = flags.map(f => `- ${f.id} (${f.field}): Evaluated as ${f.status}. Rule: ${f.rule}`).join('\n');
   return `Progress Note:
 """
 ${note}
@@ -76,4 +110,13 @@ export function buildExplanationSchema(flags) {
     properties,
     required: flags.map(f => f.id)
   };
+}
+
+// Plain JS object for OpenAI-compatible explanation schema
+export function buildExplanationSchemaExample(flags) {
+  const example = {};
+  for (const flag of flags) {
+    example[flag.id] = `Explanation for ${flag.field}`;
+  }
+  return example;
 }

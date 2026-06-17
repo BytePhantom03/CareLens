@@ -12,12 +12,12 @@ export const AI_CONFIG = {
   },
 
   groq: {
-    model: 'llama-3.1-70b-versatile',
+    model: 'llama-3.3-70b-versatile',
   },
 
   github: {
-    baseUrl: 'https://models.github.ai/inference',
-    model: 'openai/gpt-4.1-mini',
+    baseUrl: 'https://models.inference.ai.azure.com',
+    model: 'gpt-4o',
   },
 
   retry: {

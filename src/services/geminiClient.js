@@ -5,14 +5,14 @@ function sleep(ms) {
 }
 
 function getEnv(key) {
+  let val = null;
   if (typeof process !== 'undefined' && process.env && process.env[key]) {
-    return process.env[key];
+    val = process.env[key];
+  } else {
+    try { val = import.meta.env[key]; } catch (_) {}
   }
-  try {
-    return import.meta.env[key] || null;
-  } catch (_) {
-    return null;
-  }
+  // Treat empty / whitespace-only strings as missing
+  return val && val.trim() ? val.trim() : null;
 }
 
 async function callGeminiWithKey(apiKey, systemPrompt, userPrompt, responseSchema) {
@@ -52,7 +52,9 @@ async function callGeminiWithKey(apiKey, systemPrompt, userPrompt, responseSchem
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(`Gemini API error: ${response.status} - ${JSON.stringify(errorData)}`);
+      const err = new Error(`Gemini API error: ${response.status} - ${JSON.stringify(errorData)}`);
+      err.retryable = (response.status >= 500);
+      throw err;
     }
 
     const data = await response.json();
@@ -109,16 +111,19 @@ async function callOpenAICompatible(baseUrl, apiKey, model, systemPrompt, userPr
       signal: controller.signal,
     });
 
-    if (response.status === 429) {
-      const err = new Error(`${providerName}_RATE_LIMIT:429`);
-      err.status = 429;
+    if (response.status === 429 || response.status === 503) {
+      const err = new Error(`${providerName}_RATE_LIMIT:${response.status}`);
+      err.status = response.status;
       err.retryable = true;
       throw err;
     }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(`${providerName} API error: ${response.status} - ${JSON.stringify(errorData)}`);
+      const err = new Error(`${providerName} API error: ${response.status} - ${JSON.stringify(errorData)}`);
+      // 401=unauthorized, 400=bad request — these won't fix on retry, skip immediately
+      err.retryable = (response.status >= 500);
+      throw err;
     }
 
     const data = await response.json();
@@ -141,15 +146,16 @@ async function callOpenAICompatible(baseUrl, apiKey, model, systemPrompt, userPr
 }
 
 export async function callGemini(systemPrompt, userPrompt, responseSchema = null) {
-  const openAIKey    = getEnv('VITE_OPENAI_API_KEY');
-  const geminiKey1   = getEnv('VITE_GEMINI_API_KEY');
-  const geminiKey2   = getEnv('VITE_GEMINI_API_KEY_2');
-  const groqKey      = getEnv('VITE_GROQ_API_KEY');
-  const githubToken  = getEnv('VITE_GITHUB_TOKEN');
+  const openAIKey   = getEnv('VITE_OPENAI_API_KEY');
+  const githubToken = getEnv('VITE_GITHUB_TOKEN');
+  const groqKey     = getEnv('VITE_GROQ_API_KEY');
+  const geminiKey1  = getEnv('VITE_GEMINI_API_KEY');
+  const geminiKey2  = getEnv('VITE_GEMINI_API_KEY_2');
 
+  // Provider chain — first available key wins, each tried once before moving on
+  // Order: OpenAI → GitHub Models → Groq → Gemini primary → Gemini alt
   const providers = [];
 
-  // 1st — OpenAI (gpt-4o-mini)
   if (openAIKey) {
     providers.push({
       name: 'OpenAI',
@@ -159,31 +165,6 @@ export async function callGemini(systemPrompt, userPrompt, responseSchema = null
       )
     });
   }
-  // 2nd — Gemini primary
-  if (geminiKey1) {
-    providers.push({
-      name: 'Gemini (primary)',
-      fn: () => callGeminiWithKey(geminiKey1, systemPrompt, userPrompt, responseSchema)
-    });
-  }
-  // 3rd — Gemini alt
-  if (geminiKey2) {
-    providers.push({
-      name: 'Gemini (alt)',
-      fn: () => callGeminiWithKey(geminiKey2, systemPrompt, userPrompt, responseSchema)
-    });
-  }
-  // 4th — Groq (free)
-  if (groqKey) {
-    providers.push({
-      name: 'Groq',
-      fn: () => callOpenAICompatible(
-        'https://api.groq.com/openai/v1', groqKey,
-        AI_CONFIG.groq.model, systemPrompt, userPrompt, responseSchema, 'Groq'
-      )
-    });
-  }
-  // 5th — GitHub Models (free with PAT)
   if (githubToken) {
     providers.push({
       name: 'GitHub Models',
@@ -193,16 +174,38 @@ export async function callGemini(systemPrompt, userPrompt, responseSchema = null
       )
     });
   }
-
-  if (providers.length === 0) {
-    throw new Error('No AI API keys configured. Add VITE_GEMINI_API_KEY or VITE_GROQ_API_KEY to your .env file.');
+  if (groqKey) {
+    providers.push({
+      name: 'Groq',
+      fn: () => callOpenAICompatible(
+        'https://api.groq.com/openai/v1', groqKey,
+        AI_CONFIG.groq.model, systemPrompt, userPrompt, responseSchema, 'Groq'
+      )
+    });
+  }
+  if (geminiKey1) {
+    providers.push({
+      name: 'Gemini (primary)',
+      fn: () => callGeminiWithKey(geminiKey1, systemPrompt, userPrompt, responseSchema)
+    });
+  }
+  if (geminiKey2) {
+    providers.push({
+      name: 'Gemini (alt)',
+      fn: () => callGeminiWithKey(geminiKey2, systemPrompt, userPrompt, responseSchema)
+    });
   }
 
-  const { maxAttempts, baseDelayMs } = AI_CONFIG.retry;
+  if (providers.length === 0) {
+    throw new Error('No AI API keys configured. Add at least one key to your .env file.');
+  }
+
+  const { baseDelayMs } = AI_CONFIG.retry;
   let lastError = null;
 
   for (const provider of providers) {
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    // Each provider gets 2 attempts — if rate-limited, retry once after a short wait
+    for (let attempt = 1; attempt <= 2; attempt++) {
       try {
         const result = await provider.fn();
         return result;
@@ -210,16 +213,19 @@ export async function callGemini(systemPrompt, userPrompt, responseSchema = null
         lastError = err;
 
         if (!err.retryable) {
+          // Hard error (auth, bad request etc.) — skip this provider immediately
           break;
         }
 
-        if (attempt < maxAttempts) {
-          const delay = baseDelayMs * Math.pow(2, attempt - 1);
-          await sleep(delay);
+        if (attempt === 1) {
+          // Rate-limited — wait briefly then retry this provider once before giving up
+          await sleep(baseDelayMs);
         }
+        // After 2 attempts, fall through to the next provider
       }
     }
   }
 
   throw new Error(`All AI providers failed. Last error: ${lastError?.message || 'Unknown error'}`);
 }
+
