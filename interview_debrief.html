@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CareLens — Interview Debrief &amp; Preparation Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: #1a1a2e;
+    background: #fff;
+    line-height: 1.7;
+    font-size: 11pt;
+    padding: 40px 60px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  @media print {
+    body { padding: 20px 30px; font-size: 10pt; }
+    .page-break { page-break-before: always; }
+    h2 { page-break-after: avoid; }
+    pre, table { page-break-inside: avoid; }
+  }
+
+  h1 {
+    font-size: 26pt;
+    font-weight: 700;
+    color: #0f172a;
+    text-align: center;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #64748b;
+    font-size: 11pt;
+    margin-bottom: 32px;
+    font-weight: 400;
+  }
+
+  hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #cbd5e1, transparent);
+    margin: 32px 0;
+  }
+
+  h2 {
+    font-size: 16pt;
+    font-weight: 700;
+    color: #0f172a;
+    margin-top: 36px;
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #3b82f6;
+    display: inline-block;
+  }
+
+  h3 {
+    font-size: 12pt;
+    font-weight: 600;
+    color: #1e293b;
+    margin-top: 22px;
+    margin-bottom: 8px;
+  }
+
+  h4 {
+    font-size: 11pt;
+    font-weight: 600;
+    color: #334155;
+    margin-top: 16px;
+    margin-bottom: 6px;
+  }
+
+  p { margin-bottom: 10px; }
+
+  ul, ol { margin-bottom: 10px; padding-left: 22px; }
+  li { margin-bottom: 4px; }
+
+  strong { font-weight: 600; color: #0f172a; }
+
+  code {
+    font-family: 'Fira Code', monospace;
+    background: #f1f5f9;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 9.5pt;
+    color: #334155;
+  }
+
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: 'Fira Code', monospace;
+    font-size: 9pt;
+    line-height: 1.6;
+    margin: 12px 0 16px 0;
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+
+  .kw { color: #c084fc; }
+  .str { color: #86efac; }
+  .fn { color: #93c5fd; }
+  .cm { color: #64748b; }
+  .num { color: #fbbf24; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 16px 0;
+    font-size: 10pt;
+  }
+
+  th {
+    background: #1e293b;
+    color: #fff;
+    font-weight: 600;
+    padding: 8px 12px;
+    text-align: left;
+  }
+
+  td {
+    padding: 7px 12px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  tr:nth-child(even) td { background: #f8fafc; }
+
+  .callout {
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    padding: 12px 16px;
+    margin: 14px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 10pt;
+  }
+
+  .callout.warn {
+    background: #fefce8;
+    border-left-color: #eab308;
+  }
+
+  .callout strong { color: #1e40af; }
+  .callout.warn strong { color: #854d0e; }
+
+  .pipeline-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin: 14px 0;
+    font-family: 'Fira Code', monospace;
+    font-size: 9pt;
+    line-height: 1.8;
+    white-space: pre;
+    color: #334155;
+  }
+
+  .toc {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 18px 24px;
+    margin: 20px 0 30px 0;
+  }
+
+  .toc-title {
+    font-weight: 700;
+    font-size: 11pt;
+    color: #0f172a;
+    margin-bottom: 10px;
+  }
+
+  .toc ol { padding-left: 20px; }
+  .toc li { margin-bottom: 3px; color: #334155; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 9pt;
+    font-weight: 600;
+  }
+  .badge-complete { background: #dcfce7; color: #166534; }
+  .badge-vague { background: #fef9c3; color: #854d0e; }
+  .badge-missing { background: #fee2e2; color: #991b1b; }
+
+  .footer {
+    margin-top: 40px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 9pt;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+<h1>CareLens</h1>
+<p class="subtitle">Interview Debrief &amp; Preparation Guide</p>
+
+<div class="toc">
+  <div class="toc-title">Table of Contents</div>
+  <ol>
+    <li>Architecture Overview</li>
+    <li>How I Passed the Policy into the Checker — Show the Code</li>
+    <li>Walk Through a Flag — Reasoning Behind It</li>
+    <li>Could the Checker Produce a Wrong Flag?</li>
+    <li>Running Unseen Notes Live</li>
+    <li>Alternatives Considered and Why I Rejected Them</li>
+    <li>Key Decisions the AI Could NOT Make for Me</li>
+    <li>Likely Follow-Up Questions &amp; Answers</li>
+  </ol>
+</div>
+
+<hr>
+
+<!-- ───────────────── SECTION 1 ───────────────── -->
+<h2>1. Architecture Overview</h2>
+
+<p>The system uses a <strong>4-stage pipeline</strong> for every single progress note:</p>
+
+<div class="pipeline-box">┌──────────────────────────────────────────────────────┐
+│               PROGRESS NOTE INPUT                    │
+└──────────────────────────┬───────────────────────────┘
+                           ▼
+┌──────────────────────────────────────────────────────┐
+│  STAGE 1 &amp; 2: AI EXTRACTION                         │
+│  AI reads the note → returns structured booleans     │
+│  e.g. { mentioned: true, has_numeric_score: false }  │
+│  Uses constrained JSON schema                        │
+└──────────────────────────┬───────────────────────────┘
+                           ▼
+┌──────────────────────────────────────────────────────┐
+│  STAGE 3: DETERMINISTIC RULE ENGINE                  │
+│  Pure JavaScript — NO AI involved                    │
+│  evaluate() → "Complete" / "Missing" / "Vague"       │
+│  This is the ONLY place the verdict is decided       │
+└──────────────────────────┬───────────────────────────┘
+                           ▼
+┌──────────────────────────────────────────────────────┐
+│  STAGE 4: AI EXPLANATION GENERATION                  │
+│  Only runs for Missing / Vague flags                 │
+│  Generates nurse-friendly explanations               │
+└──────────────────────────────────────────────────────┘</div>
+
+<div class="callout">
+  <strong>Why this matters:</strong> The AI never decides if something is compliant. It only extracts facts. A deterministic JavaScript function makes the final call. This separation is the single most important architectural decision.
+</div>
+
+<hr>
+
+<!-- ───────────────── SECTION 2 ───────────────── -->
+<h2>2. How I Passed the Policy into the Checker</h2>
+
+<h3>The Core Idea</h3>
+<p>I did <strong>not</strong> dump the entire policy document into one big prompt. Instead, I decomposed the policy into a <strong>structured JavaScript object</strong> where each bullet point from the policy becomes a self-contained requirement object with three parts:</p>
+
+<table>
+  <tr><th>Part</th><th>Purpose</th><th>Who Uses It</th></tr>
+  <tr><td><code>extractionSchema</code></td><td>Tells the AI exactly what booleans to extract</td><td>AI (Stage 1)</td></tr>
+  <tr><td><code>evaluate()</code></td><td>Deterministic rule — takes booleans, returns verdict</td><td>JavaScript (Stage 3)</td></tr>
+  <tr><td><code>field</code></td><td>Human-readable label for the output</td><td>UI / Excel export</td></tr>
+</table>
+
+<h3>Show the Code — One Requirement</h3>
+<p>Here is a single policy requirement from <code>policy.js</code>:</p>
+
+<pre><code><span class="cm">// Policy: "Resident condition — pain level (use 0–10 scale)"</span>
+{
+  <span class="fn">id</span>: <span class="str">"d1_pain"</span>,
+  <span class="fn">field</span>: <span class="str">"Pain scale not documented"</span>,
+  <span class="fn">extractionSchema</span>: {
+    <span class="fn">mentioned</span>: {
+      type: <span class="str">"boolean"</span>,
+      description: <span class="str">"Is pain or lack of pain mentioned anywhere in the note?"</span>
+    },
+    <span class="fn">has_numeric_score</span>: {
+      type: <span class="str">"boolean"</span>,
+      description: <span class="str">"Is there a specific numeric 0-10 pain score? e.g. '2/10'"</span>
+    }
+  },
+  <span class="fn">evaluate</span>: (data) =&gt; {
+    <span class="kw">if</span> (!data.mentioned) <span class="kw">return</span> <span class="str">"Missing"</span>;
+    <span class="kw">if</span> (!data.has_numeric_score) <span class="kw">return</span> <span class="str">"Missing"</span>;
+    <span class="kw">return</span> <span class="str">"Complete"</span>;
+  }
+}</code></pre>
+
+<p><strong>What's happening:</strong></p>
+<ol>
+  <li>The <code>extractionSchema</code> creates <strong>two separate booleans</strong> — <code>mentioned</code> (liberal threshold) and <code>has_numeric_score</code> (strict threshold).</li>
+  <li>The <code>evaluate()</code> function is pure JavaScript. No AI involved. If pain is mentioned but there's no numeric score, that's "Missing" because the policy says <em>"use the 0-10 scale"</em>.</li>
+  <li>The AI never sees the word "Missing" or "Vague". It only returns <code>true</code> or <code>false</code>.</li>
+</ol>
+
+<h3>How the Schema Flows into the Prompt</h3>
+<p>The <code>promptBuilder.js</code> dynamically builds a JSON schema from the policy object:</p>
+
+<pre><code><span class="kw">export function</span> <span class="fn">buildExtractionSchema</span>(requirements) {
+  <span class="kw">const</span> properties = {};
+  <span class="kw">for</span> (<span class="kw">const</span> req <span class="kw">of</span> requirements) {
+    properties[req.id] = {
+      type: <span class="str">"OBJECT"</span>,
+      properties: {},
+      required: []
+    };
+    <span class="kw">for</span> (<span class="kw">const</span> [key, prop] <span class="kw">of</span> Object.entries(req.extractionSchema)) {
+      properties[req.id].properties[key] = {
+        type: prop.type.toUpperCase(),
+        description: prop.description
+      };
+      properties[req.id].required.push(key);
+    }
+  }
+  <span class="kw">return</span> { type: <span class="str">"OBJECT"</span>, properties, required: Object.keys(properties) };
+}</code></pre>
+
+<p>This means <strong>adding a new policy requirement is one object</strong> in <code>policy.js</code>. No prompt editing, no new AI logic. The system automatically picks it up.</p>
+
+<h3>Policy Structure Across 3 Days</h3>
+<table>
+  <tr><th>Day</th><th>Label</th><th>Requirements</th></tr>
+  <tr><td>Day 1</td><td>Incident Report</td><td>15 requirements — date/time, location, witnessed, pain scale, consciousness, visible injury, limb movement, vitals (5 individual signs), immediate actions, GP notification, NOK notification, GP conditional actions, risk factors, care plan review, falls risk score, mobility aid</td></tr>
+  <tr><td>Day 2</td><td>Continuation Note</td><td>6 requirements — pain update, mobility with weight-bearing, new symptoms, vitals, GP follow-up, care plan changes</td></tr>
+  <tr><td>Day 3</td><td>Closure / Escalation</td><td>6 requirements — pain outcome, mobility baseline, outstanding actions, incident closure, prevention plan, escalation</td></tr>
+</table>
+
+<hr>
+
+<!-- ───────────────── SECTION 3 ───────────────── -->
+<div class="page-break"></div>
+<h2>3. Walk Through a Flag</h2>
+
+<h3>Example: Peter Parker, Day 1 — "Care plan update unconfirmed"</h3>
+<p><strong>The note says:</strong> <em>"Care plan: Will update."</em></p>
+
+<h4>Stage 1 — AI Extraction</h4>
+<p>The AI receives this schema for <code>d1_care_plan_review</code>:</p>
+<pre><code>{
+  <span class="str">"mentioned"</span>: { <span class="str">"description"</span>: <span class="str">"Is the care plan mentioned at all?"</span> },
+  <span class="str">"is_confirmed"</span>: { <span class="str">"description"</span>: <span class="str">"Is the care plan explicitly confirmed as already reviewed and updated? 'Will update' = false."</span> }
+}</code></pre>
+<p>The AI returns:</p>
+<pre><code>{ <span class="str">"mentioned"</span>: <span class="kw">true</span>, <span class="str">"is_confirmed"</span>: <span class="kw">false</span> }</code></pre>
+<p>This is correct. "Will update" is future-tense. The policy asks: <em>"Has the care plan been reviewed — Yes or No?"</em> The answer is <strong>not yet</strong>.</p>
+
+<h4>Stage 3 — Deterministic Rule Engine</h4>
+<pre><code><span class="fn">evaluate</span>: (data) =&gt; {
+  <span class="kw">if</span> (!data.mentioned) <span class="kw">return</span> <span class="str">"Missing"</span>;     <span class="cm">// mentioned=true → passes</span>
+  <span class="kw">if</span> (!data.is_confirmed) <span class="kw">return</span> <span class="str">"Vague"</span>;  <span class="cm">// is_confirmed=false → VAGUE</span>
+  <span class="kw">return</span> <span class="str">"Complete"</span>;
+}</code></pre>
+<p>Result: <span class="badge badge-vague">⚠️ Vague</span> — The nurse mentioned the care plan but didn't confirm it was actually done.</p>
+
+<h4>Stage 4 — Explanation Generation</h4>
+<p>The AI generates: <em>"Policy requires the care plan to be confirmed as reviewed and updated (Yes or No). Note states 'Will update' which indicates intent but not completion."</em></p>
+
+<h4>Why "Vague" and not "Missing"?</h4>
+<table>
+  <tr><th>Outcome</th><th>Meaning</th><th>When</th></tr>
+  <tr><td><span class="badge badge-complete">✅ Complete</span></td><td>Fully documented per policy</td><td>All booleans pass</td></tr>
+  <tr><td><span class="badge badge-vague">⚠️ Vague</span></td><td>Topic mentioned but lacks clinical specificity</td><td><code>mentioned=true</code> but clinical confirmation is <code>false</code></td></tr>
+  <tr><td><span class="badge badge-missing">🚩 Missing</span></td><td>Topic is completely absent</td><td><code>mentioned=false</code> or critical data absent</td></tr>
+</table>
+
+<p>The "Vague" category exists because vague documentation is different from no documentation. A nurse who writes "Will update" is aware of the requirement but didn't complete the action. These are different coaching conversations.</p>
+
+<hr>
+
+<!-- ───────────────── SECTION 4 ───────────────── -->
+<h2>4. Could the Checker Produce a Wrong Flag?</h2>
+<p><strong>Honest answer: Yes, absolutely.</strong> There are two types of errors:</p>
+
+<h3>Type 1: False Positive (flags something that's actually fine)</h3>
+<p><strong>How it happens:</strong> The AI misreads contextual language.</p>
+<p><strong>Real example:</strong> <em>"Assisted back to wheelchair."</em> An early version treated this as mobility documentation. But the policy asks: <em>"Can the resident move all limbs?"</em> Being assisted to a wheelchair doesn't confirm limb movement ability.</p>
+<p><strong>How I fixed it:</strong> I added explicit negative examples in the schema description:</p>
+<pre><code><span class="str">"These do NOT count: 'assisted to wheelchair', 'complaining of hip pain'
+— these describe assistance, not limb movement ability."</span></code></pre>
+
+<h3>Type 2: False Negative (misses something that should be flagged)</h3>
+<p><strong>Real example:</strong> <em>"Doing much better"</em> — an early version set <code>clinically_confirmed = true</code> for pain outcome on Day 3. But this is not a clinical confirmation.</p>
+<p><strong>How I fixed it:</strong> The <strong>dual-threshold system</strong>:</p>
+
+<pre><code><span class="cm">LIBERAL THRESHOLD for 'mentioned' fields:</span>
+  <span class="str">"seems okay"</span> → pain_mentioned = <span class="kw">true</span>
+
+<span class="cm">STRICT THRESHOLD for clinical fields:</span>
+  <span class="str">"seems okay"</span> does NOT confirm full weight-bearing
+  → can_full_weight_bear = <span class="kw">false</span></code></pre>
+
+<h3>How Would I Catch Wrong Flags?</h3>
+<ol>
+  <li><strong>Deterministic rule engine</strong> — The AI only extracts booleans. Even if one boolean is wrong, the damage is limited. The <code>evaluate()</code> function is predictable, testable, and never hallucinates.</li>
+  <li><strong>Comparison testing with known samples</strong> — Two built-in residents (John Doe = perfect, Peter Parker = messy) are run after every prompt change.</li>
+  <li><strong>Extraction Preview panel</strong> — Shows raw AI booleans alongside final flags. I can see <em>exactly which boolean</em> was wrong.</li>
+  <li><strong>Low temperature (0.1)</strong> — Minimizes creative interpretation. For compliance checking, the AI should be as deterministic as possible.</li>
+</ol>
+
+<hr>
+
+<!-- ───────────────── SECTION 5 ───────────────── -->
+<div class="page-break"></div>
+<h2>5. Running Unseen Notes Live</h2>
+
+<h3>Edge Cases the System Handles</h3>
+<table>
+  <tr><th>Edge Case</th><th>What Happens</th></tr>
+  <tr><td>Day 2 without Day 1</td><td>Blocked with warning: <em>"Day 1 is missing. Day 2 requires Day 1."</em></td></tr>
+  <tr><td>Day 2 less than 24h after Day 1</td><td>Blocked: <em>"Day 2 is only Xh after Day 1. Minimum 24-hour gap."</em></td></tr>
+  <tr><td>Day numbers beyond 1–3</td><td>Silently ignored (policy only covers 3 days)</td></tr>
+  <tr><td>API rate limit hit</td><td>Auto-retries with 7.5s backoff, then falls to next provider</td></tr>
+  <tr><td>All AI providers fail</td><td>Error shown per-note, other notes still process</td></tr>
+</table>
+
+<h3>Provider Fallback Chain</h3>
+<pre><code>OpenAI → GitHub Models (GPT-4o) → Groq (Llama 3.3) → Gemini (primary) → Gemini (alt)</code></pre>
+<p>If one hits a rate limit, it's put on a 15-second cooldown and the next provider is tried automatically.</p>
+
+<h3>What to Say if a Flag Looks Wrong During the Demo</h3>
+<div class="callout">
+  <em>"Let me open the Extraction Preview to see exactly what booleans the AI returned. If a boolean is wrong, the fix is in the field description — I'd add a more specific example to the extractionSchema. The evaluate() function stays the same because the rule logic is correct; only the AI's interpretation needs refinement."</em>
+</div>
+
+<hr>
+
+<!-- ───────────────── SECTION 6 ───────────────── -->
+<h2>6. Alternatives Considered and Why I Rejected Them</h2>
+
+<h3>Alternative 1: Dump the Entire Policy Into One Prompt</h3>
+<p><strong>Approach:</strong> Send the full policy + note to the AI and ask <em>"What's missing?"</em></p>
+<ul>
+  <li><strong>Unpredictable output</strong> — Free-text analysis, inconsistent structure</li>
+  <li><strong>No separation of concerns</strong> — AI decides both what to look for AND whether it passes. If it hallucinates a requirement, there's no safety net</li>
+  <li><strong>Can't unit test</strong> — With free-text output, you can't write assertions</li>
+  <li><strong>Prompt fragility</strong> — Changing one sentence could change the entire output</li>
+</ul>
+
+<h3>Alternative 2: Fine-Tune a Model</h3>
+<p><strong>Approach:</strong> Collect labelled notes, train a model.</p>
+<ul>
+  <li><strong>Data doesn't exist</strong> — No pre-labelled dataset of aged care notes tagged against this policy</li>
+  <li><strong>Policy changes break the model</strong> — Re-label and re-train for every change. My approach: change one object in <code>policy.js</code></li>
+  <li><strong>Overkill</strong> — Decomposition + extraction works without training data</li>
+</ul>
+
+<h3>Alternative 3: Regex / Keyword Matching</h3>
+<p><strong>Approach:</strong> Pattern matching for clinical terms.</p>
+<ul>
+  <li><strong>Nurses write naturally</strong> — <em>"Complaining of sore hip"</em> means pain is mentioned but the keyword "pain" isn't there</li>
+  <li><strong>Context matters</strong> — <em>"Will update care plan"</em> and <em>"Care plan updated"</em> have opposite meanings but same keywords</li>
+  <li><strong>Vague vs. Missing distinction</strong> requires understanding nuance that regex can't handle</li>
+</ul>
+
+<h3>Alternative 4: Embedding-Based Semantic Search</h3>
+<p><strong>Approach:</strong> Embed requirements and note sentences, match by cosine similarity.</p>
+<ul>
+  <li><strong>Similarity ≠ Compliance</strong> — <em>"Pain: comfortable"</em> is semantically similar to "pain" but it's not compliant (missing numeric score)</li>
+  <li><strong>No boolean extraction</strong> — Embeddings say topics are related, not whether specific details are present</li>
+  <li><strong>Threshold tuning nightmare</strong> — What cosine score means "compliant"?</li>
+</ul>
+
+<h3>Alternative 5: Single LLM Call Per Note</h3>
+<p><strong>Approach:</strong> Check all 15 requirements in one prompt.</p>
+<ul>
+  <li><strong>Context window pressure</strong> — 15 complex requirements push limits, reducing accuracy</li>
+  <li><strong>Error contamination</strong> — Confusion about one requirement can contaminate others</li>
+  <li><strong>I actually DO group per day</strong> — But the schema forces one object per requirement ID, preventing cross-contamination</li>
+</ul>
+
+<hr>
+
+<!-- ───────────────── SECTION 7 ───────────────── -->
+<div class="page-break"></div>
+<h2>7. Key Decisions the AI Could NOT Make for Me</h2>
+
+<h3>1. What counts as "Vague" vs. "Missing"</h3>
+<p>The AI doesn't know the difference. I defined it: Missing = entirely absent or critical data missing. Vague = topic mentioned but lacks clinical specificity. This is encoded in each <code>evaluate()</code> function.</p>
+
+<h3>2. The dual-threshold system</h3>
+<p>The AI would naturally treat all fields the same. I explicitly designed the prompt to have two modes — liberal for <code>mentioned</code> fields, strict for clinical fields. This distinction doesn't exist in any default AI behaviour.</p>
+
+<h3>3. Whether "Assisted back to wheelchair" counts as limb movement</h3>
+<p>The AI's default answer was "yes". But the policy asks a specific clinical question. I wrote explicit negative examples in the schema description to correct this.</p>
+
+<h3>4. The 3-day sequential structure</h3>
+<ul>
+  <li>Each note is checked independently (no cross-day context)</li>
+  <li>Day 3 is blocked if Day 1 is missing (can't close an incident never opened)</li>
+  <li>Minimum 24-hour gap between days enforced</li>
+</ul>
+
+<h3>5. The escalation logic on Day 3</h3>
+<p>The policy says: <em>"If not stabilised, escalate."</em> The AI initially flagged notes saying <em>"doing much better"</em> because it interpreted "not stabilised" literally. I flipped the logic: only flag if there are <strong>explicit unresolved clinical issues</strong>. Vague positive language is treated as trending towards stabilisation.</p>
+
+<hr>
+
+<!-- ───────────────── SECTION 8 ───────────────── -->
+<h2>8. Likely Follow-Up Questions</h2>
+
+<h3>Q: "Why not use GPT-4o for everything?"</h3>
+<p><strong>A:</strong> Cost and rate limits. Each note requires 2 AI calls. A batch of 3 residents × 3 days = 18 calls minimum. The fallback chain means if one provider is rate-limited, the system automatically tries the next. Temperature is 0.1 across all providers for consistency.</p>
+
+<h3>Q: "How do you know the AI returns valid JSON?"</h3>
+<p><strong>A:</strong> Two mechanisms: (1) Gemini's native <code>responseSchema</code> parameter forces valid JSON. (2) For OpenAI-compatible providers, I embed a JSON example in the system prompt, set <code>response_format: { type: 'json_object' }</code>, and <code>JSON.parse()</code> with error handling.</p>
+
+<h3>Q: "What if the policy changes?"</h3>
+<p><strong>A:</strong> Add, remove, or modify objects in <code>policy.js</code>. No prompt engineering needed. Example — adding a new requirement:</p>
+<pre><code>{
+  <span class="fn">id</span>: <span class="str">"d1_neuro_obs"</span>,
+  <span class="fn">field</span>: <span class="str">"Neurological observations not documented"</span>,
+  <span class="fn">extractionSchema</span>: {
+    mentioned: { type: <span class="str">"boolean"</span>, description: <span class="str">"Are neuro obs mentioned?"</span> },
+    has_gcs_score: { type: <span class="str">"boolean"</span>, description: <span class="str">"Is a GCS score recorded?"</span> }
+  },
+  <span class="fn">evaluate</span>: (data) =&gt; {
+    <span class="kw">if</span> (!data.mentioned) <span class="kw">return</span> <span class="str">"Missing"</span>;
+    <span class="kw">if</span> (!data.has_gcs_score) <span class="kw">return</span> <span class="str">"Vague"</span>;
+    <span class="kw">return</span> <span class="str">"Complete"</span>;
+  }
+}</code></pre>
+<p>That's it. The system auto-generates the schema, prompt, evaluation, and Excel output.</p>
+
+<h3>Q: "How would you scale to 100 residents?"</h3>
+<p><strong>A:</strong> 100 residents × 3 days = 300 notes × 2 calls = 600 API calls. With fallback chain and rate limit handling, this takes ~25 minutes sequentially. To speed up: add parallel processing with a concurrency limiter (e.g., 3 notes simultaneously across different providers).</p>
+
+<h3>Q: "Why is the rule engine in JavaScript and not in the AI?"</h3>
+<p><strong>A:</strong> <strong>Testability and trust.</strong> If I ask the AI "Is this compliant?", I can't unit test that. If I write <code>evaluate: (data) =&gt; data.mentioned ? "Complete" : "Missing"</code>, I can test it with <code>{ mentioned: true }</code> and know the result will never change. The AI is unpredictable; the rule engine is not.</p>
+
+<h3>Q: "What was the hardest part?"</h3>
+<p><strong>A:</strong> Getting the AI to distinguish between <em>"the nurse mentioned the topic vaguely"</em> and <em>"the nurse provided the specific clinical detail the policy requires."</em> This is the entire dual-threshold system. It took multiple iterations of prompt refinement with real notes. The breakthrough was adding concrete positive and negative examples directly in each field's <code>description</code>.</p>
+
+<div class="footer">
+  CareLens — Falls Management Policy Compliance Checker<br>
+  Interview Preparation Document
+</div>
+
+</body>
+</html>

@@ -4,6 +4,7 @@ import { exportBatchToExcel } from '../utils/exportToExcel';
 import { groupResultsByResident } from '../utils/groupResultsByResident';
 import ResidentReportTable from './ResidentReportTable';
 import { saveAuditResults } from '../services/historyStorage';
+import { hasAnyApiKey } from '../services/geminiClient';
 
 export default function BatchMode({ pipelineInputs, onReset }) {
   const [results, setResults] = useState([]);
@@ -25,12 +26,18 @@ export default function BatchMode({ pipelineInputs, onReset }) {
 
   const startBatch = async () => {
     isCancelled.current = false;
-    setIsProcessing(true);
     setResults([]);
     setCurrentIndex(0);
     setCurrentLabel('');
     setBatchError(null);
     setSelectedResident(null);
+
+    if (!hasAnyApiKey()) {
+      setBatchError('No API key configured. Please set at least one API key in the API Configuration (⚙️ icon in the top-right corner) before running checks.');
+      return;
+    }
+
+    setIsProcessing(true);
 
     try {
       const finalResults = await runBatchChecks(

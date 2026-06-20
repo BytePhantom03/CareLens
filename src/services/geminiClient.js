@@ -229,3 +229,12 @@ export async function callGemini(systemPrompt, userPrompt, responseSchema = null
   throw new Error(`All AI providers failed. Last error: ${lastError?.message || 'Unknown error'}`);
 }
 
+export function hasAnyApiKey() {
+  return !!(
+    getEnv('VITE_OPENAI_API_KEY') ||
+    getEnv('VITE_GITHUB_TOKEN') ||
+    getEnv('VITE_GROQ_API_KEY') ||
+    getEnv('VITE_GEMINI_API_KEY') ||
+    getEnv('VITE_GEMINI_API_KEY_2')
+  );
+}
