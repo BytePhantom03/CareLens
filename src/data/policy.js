@@ -1,14 +1,4 @@
-/**
- * Falls Management Policy — POL-FAL-001
- *
- * This file encodes the exact requirements from the written policy document.
- * Each requirement maps to a policy bullet point.
- * The extractionSchema tells the AI what to look for.
- * The evaluate function is a deterministic rule engine — it ONLY uses the AI's extracted booleans.
- *
- * DO NOT add requirements that are not in the original policy.
- * DO NOT modify evaluate functions — they are deterministic.
- */
+
 export const FALLS_POLICY = {
   metadata: {
     policyNumber: "POL-FAL-001",
